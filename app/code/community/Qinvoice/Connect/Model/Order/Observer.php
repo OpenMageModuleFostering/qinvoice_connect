@@ -7,17 +7,56 @@ class Qinvoice_Connect_Model_Order_Observer
         //parent::__construct();
     }
 
-    public function sendOnOrder($observer){
-        $order = $observer->getEvent()->getOrder(); 
-
+    public function sendOnComplete($observer){
+        $order = $observer->getEvent()->getOrder();
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
-        $varPath = 'invoice_options/invoice/invoice_on_order';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $varPath = 'invoice_options/invoice/invoice_trigger';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
 
-        if($varOnOrder == 1){
+        if($varOnOrder == 'complete' && $order->getState() == Mage_Sales_Model_Order::STATE_COMPLETE){
+            $this->createInvoiceForQinvoice($order->getId(), false);
+        }else{
+            return true;
+        }
+    }
+
+      public function sendOnShip($observer){
+        $shipment = $observer->getEvent()->getShipment(); 
+        $order = $shipment->getOrder(); 
+
+        // GETTING TRIGGER SETTING
+        $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
+        $varPath = 'invoice_options/invoice/invoice_trigger';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
+        $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
+        $varOnOrder = $rowTwo['value'];
+
+        if($varOnOrder == 'ship'){
+            $this->createInvoiceForQinvoice($order->getId(), false);
+        }else{
+            return true;
+        }
+    }
+
+    public function sendOnOrder($observer){
+        $order = $observer->getEvent()->getOrder(); 
+
+
+
+        // GETTING TRIGGER SETTING
+        $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
+        $varPath = 'invoice_options/invoice/invoice_trigger';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
+        $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
+        $varOnOrder = $rowTwo['value'];
+
+        if($varOnOrder == 'order'){
             $this->createInvoiceForQinvoice($order->getId(), false);
         }else{
             return true;
@@ -36,12 +75,13 @@ class Qinvoice_Connect_Model_Order_Observer
 
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
-        $varPath = 'invoice_options/invoice/invoice_on_order';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $varPath = 'invoice_options/invoice/invoice_trigger';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
 
-        if($varOnOrder == 0){
+        if($varOnOrder == 'payment'){
             $this->createInvoiceForQinvoice($order_ids[0], true);
         }else{
             return true;
@@ -59,7 +99,8 @@ class Qinvoice_Connect_Model_Order_Observer
         
         $varCurrenyCode =  Mage::app()->getStore()->getCurrentCurrency()->getCode();
         // GETTING ORDER STATUS
-        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid FROM sales_flat_order WHERE entity_id=".$varOrderID);
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id, customer_taxvat FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
         $rowOne = $resultOne->fetch(PDO::FETCH_ASSOC);
         
         
@@ -68,7 +109,8 @@ class Qinvoice_Connect_Model_Order_Observer
             $varStatus = 'Paid';
             // GETTING API URL
             $varURLPath = 'invoice_options/invoice/paid_remark';
-            $resultURL = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varURLPath."'");
+            $prefix = Mage::getConfig()->getTablePrefix();
+            $resultURL = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varURLPath."'");
             $rowURL = $resultURL->fetch(PDO::FETCH_ASSOC);
             $paid_remark = $rowURL['value'];
             $paid = 1;
@@ -83,7 +125,8 @@ class Qinvoice_Connect_Model_Order_Observer
             $varStatus = 'Sent';
         }
         
-        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM {$prefix}sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
         
 
         if(!$result) {
@@ -102,63 +145,117 @@ class Qinvoice_Connect_Model_Order_Observer
 
         // GETTING API USERNAME
         $varPath = 'invoice_options/invoice/api_username';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $username = $rowTwo['value'];
 
         // GETTING API PASSWORD
         $varPath = 'invoice_options/invoice/api_password';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $password = $rowTwo['value'];
 
         // GETTING LAYOUT CODE
         $varPath = 'invoice_options/invoice/layout_code';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $layout_code = $rowTwo['value'];
 
         
         // GETTING CLIENT DETAILS
-        $resultThree = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode FROM sales_flat_order_address WHERE email='".$rowOne['customer_email']."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultThree = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id, vat_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['billing_address_id']."'");
         $rowThree = $resultThree->fetch(PDO::FETCH_ASSOC);
 
         $invoice = new qinvoice($username,$password);
 
-        $invoice->companyname = $rowThree['firstname'].' '.$rowThree['lastname'];       // Your customers company name
-        $invoice->contactname = $rowThree['firstname'].' '.$rowThree['lastname'];       // Your customers contact name
+        $invoice->companyname = $rowThree['company'];       // Your customers company name
+        $invoice->firstname = $rowThree['firstname'];       // Your customers contact name
+        $invoice->lastname = $rowThree['lastname'];       // Your customers contact name
         $invoice->email = $rowOne['customer_email'];                // Your customers emailaddress (invoice will be sent here)
+        $invoice->phone = $rowOne['telephone'];
         $invoice->address = $rowThree['street'];                // Self-explanatory
         $invoice->zipcode = $rowThree['postcode'];              // Self-explanatory
         $invoice->city = $rowThree['city'];                     // Self-explanatory
-        $invoice->country = '';                 // 2 character country code: NL for Netherlands, DE for Germany etc
+        $invoice->country = $rowThree['country_id'];                 // 2 character country code: NL for Netherlands, DE for Germany etc
+        $invoice->vatnumber = strlen($rowThree['vat_id']) > 3 ? $rowThree['vat_id'] : $rowOne['customer_taxvat'];  
+
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
+        $rowFour = $resultFour->fetch(PDO::FETCH_ASSOC);
+
+        $invoice->delivery_companyname = $rowFour['delivery_company'];       // Your customers company name
+        $invoice->delivery_firstname = $rowFour['delivery_firstname'];       // Your customers contact name
+        $invoice->delivery_lastname = $rowFour['delivery_lastname'];       // Your customers contact name
+        $invoice->delivery_address = $rowFour['street'];                // Self-explanatory
+        $invoice->delivery_zipcode = $rowFour['postcode'];              // Self-explanatory
+        $invoice->delivery_city = $rowFour['city'];                     // Self-explanatory
+        $invoice->delivery_country = $rowFour['country_id'];      
+
         $invoice->vat = '';                     // Self-explanatory
         $invoice->paid = $paid;
+
+        $varActionPath = 'invoice_options/invoice/save_relation';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultAction = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varActionPath."'");
+        $rowAction = $resultAction->fetch(PDO::FETCH_ASSOC);
+        $save_relation = $rowAction['value'];
+
+        $invoice->saverelation = $save_relation;
          
         $varRemarkPath = 'invoice_options/invoice/invoice_remark';
-        $resultRemark = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varRemarkPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultRemark = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varRemarkPath."'");
         $rowRemark = $resultRemark->fetch(PDO::FETCH_ASSOC);
         $invoice_remark = $rowRemark['value'];
         $invoice->remark = str_replace('{order_id}',$rowOne['increment_id'],$invoice_remark) .' '. $paid_remark;                  // Self-explanatory
 
-        $varSendPath = 'invoice_options/invoice/send_mail';
-        $resultSend = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varSendPath."'");
-        $rowSend = $resultSend->fetch(PDO::FETCH_ASSOC);
-        $send_mail = $rowSend['value'];
+        $varActionPath = 'invoice_options/invoice/invoice_action';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultAction = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varActionPath."'");
+        $rowAction = $resultAction->fetch(PDO::FETCH_ASSOC);
+        $invoice_action = $rowAction['value'];
 
         $varLayoutPath = 'invoice_options/invoice/layout_code';
-        $resultLayout = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varLayoutPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultLayout = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varLayoutPath."'");
         $rowLayout = $resultLayout->fetch(PDO::FETCH_ASSOC);
         $invoice_layout = $rowLayout['value'];
+
+        $varCalculationmethodPath = 'invoice_options/invoice/calculation_method';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultCalculationmethod = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varCalculationmethodPath."'");
+        $rowCalculationmethod = $resultCalculationmethod->fetch(PDO::FETCH_ASSOC);
+        $invoice_calculationmethod = $rowCalculationmethod['value'];
+
+        $invoice->calculation_method = $invoice_calculationmethod;
+
+        $invoice_layout_s = @unserialize($invoice_layout);
+        if ($invoice_layout_s !== false) {
+            // serialized
+            $invoice_layout = @unserialize($invoice_layout);
+            if(isset($invoice_layout[$rowFour['country_id']])){
+                $invoice_layout = @$invoice_layout[$rowFour['country_id']];    
+            }else{
+                $invoice_layout = @$invoice_layout['default'];
+            }
+        } else {
+            // not serialized
+            $invoice_layout = $invoice_layout;
+        }
 
         $invoice->setLayout($invoice_layout);
 
         $varTagPath = 'invoice_options/invoice/invoice_tag';
-        $resultTag = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varTagPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTag = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varTagPath."'");
         $rowTag = $resultTag->fetch(PDO::FETCH_ASSOC);
         $invoice_tag = $rowTag['value'];
 
-        $invoice->send = $send_mail;
+        $invoice->action = $invoice_action;
 
         // OPTIONAL: Add tags
         $invoice->addTag($rowOne['increment_id']);
@@ -173,6 +270,7 @@ class Qinvoice_Connect_Model_Order_Observer
                 $_productId = $arrData[$i]['product_id'];
                 $_product = Mage::getModel('catalog/product')->load($_productId);
                 $category = $_product->getData('qinvoice_category');
+                $productcode = $_product->getData('qinvoice_productcode');
   
                 $arrItemOptions = unserialize($arrData[$i]['product_options']);
 
@@ -181,7 +279,7 @@ class Qinvoice_Connect_Model_Order_Observer
                 {
                     for($k=0; $k <count($arrItemOptions['options']); $k++)
                     {
-                        $varDescription .= $arrItemOptions['options'][$k]['label'].": ".$arrItemOptions['options'][$k]['print_value']."\n";
+                        $varDescription .= "\n".$arrItemOptions['options'][$k]['label'].": ".$arrItemOptions['options'][$k]['print_value']."\n";
                     }
                 }
                 else
@@ -189,16 +287,21 @@ class Qinvoice_Connect_Model_Order_Observer
                 {
                     for($k=0; $k <count($arrItemOptions['attributes_info']); $k++)
                     {
-                        $varDescription .= $arrItemOptions['attributes_info'][$k]['label'].": ".$arrItemOptions['attributes_info'][$k]['value']."\n";
+                        $varDescription .= "\n".$arrItemOptions['attributes_info'][$k]['label'].": ".$arrItemOptions['attributes_info'][$k]['value']."\n";
                     }
                 }
                 else
                 {
-                    $varDescription = "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']);
+                    $varDescription = ''; //"[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']);
                 }
+               
                 $params = array(    
-                    'description' => $arrData[$i]['name'] ."\n". $varDescription,
+                    'code' => $productcode,
+                    'description' => "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']) . $varDescription,
                     'price' => $arrData[$i]['base_price']*100,
+                    //'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
+                    'price_incl' => round((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
+                    'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
                     'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
                     'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
                     'quantity' => $arrData[$i]['qty_ordered']*100,
@@ -210,10 +313,13 @@ class Qinvoice_Connect_Model_Order_Observer
             }
             if($rowOne['shipping_amount'] > 0)
             {
-                $params = array(    
+                $params = array(  
+                    'code' => '',  
                     'description' => trim($rowOne['shipping_description']),
                     'price' => $rowOne['shipping_amount']*100,
-                    'vatpercentage' => ($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100,
+                    'price_incl' => $rowOne['shipping_incl_tax']*100,
+                    'price_vat' => $rowOne['shipping_tax_amount']*100,
+                    'vatpercentage' => round(($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100)*100,
                     'discount' => 0,
                     'quantity' => 100,
                     'categories' => 'shipping'
@@ -234,33 +340,6 @@ class Qinvoice_Connect_Model_Order_Observer
         
 
         //$curlInvoiveResult = $this->sendCurlRequest($createInvoiceXML);
-        
-        // GETTING SEND MAIL SETTING
-        $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
-        $varPath = 'invoice_options/invoice/send_mail';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
-        $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
-        $varSendMailFlag = $rowTwo['value'];
-        
-        if($varSendMailFlag && 1==2)
-        {               
-            $xml = stripslashes($curlInvoiveResult);
-            $objXml = new SimpleXMLElement($xml);                
-            $arrParamList = $this->objectsIntoArray($objXml);
-            
-            if($arrParamList['@attributes']['status'] == '200')
-            {
-                $varInvoiceID = $arrParamList['invoice_id'];
-                
-                $varSendInvoiceXml = '<?xml version="1.0" encoding="utf-8"?>
-                <request method="sendInvoiceMail">
-                    <invoice_id>'.$varInvoiceID.'</invoice_id>
-                </request>';
-                $curlInvoiceSendResult = $this->sendCurlRequest($varSendInvoiceXml);
-                
-            }
-        
-        }
     }
     
     public function notify_to_admin($name, $email, $msg) 
@@ -288,15 +367,24 @@ class qinvoice{
     private $password;
 
     public $companyname;
-    public $contactname;
+    public $firstname;
+    public $lastname;
     public $email;
     public $address;
+    public $zipcode;
     public $city;
     public $country;
+    public $delivery_companyname;
+    public $delivery_firstname;
+    public $delivery_lastname;
+    public $delivery_address;
+    public $delivery_zipcode;
+    public $delivery_city;
+    public $delivery_country;
     public $vatnumber;
     public $remark;
     public $paid;
-    public $send;
+    public $action;
 
     public $layout;
     
@@ -314,7 +402,8 @@ class qinvoice{
         
         // GETTING API URL
         $varURLPath = 'invoice_options/invoice/api_url';
-        $resultURL = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varURLPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultURL = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varURLPath."'");
         $rowURL = $resultURL->fetch(PDO::FETCH_ASSOC);
         $apiURL = $rowURL['value'];
 
@@ -334,8 +423,11 @@ class qinvoice{
     }
 
     public function addItem($params){
+        $item['code'] = (isset($params['code']) ? $params['code'] : "");
         $item['description'] = $params['description'];
         $item['price'] = $params['price'];
+        $item['price_incl'] = $params['price_incl'];
+        $item['price_vat'] = $params['price_vat'];
         $item['vatpercentage'] = $params['vatpercentage'];
         $item['discount'] = $params['discount'];
         $item['quantity'] = $params['quantity'];
@@ -376,26 +468,39 @@ class qinvoice{
     private function buildXML(){
         $string = '<request>
                         <login mode="newInvoice">
-                            <username>'.$this->username.'</username>
-                            <password>'.$this->password.'</password>
+                            <username><![CDATA['.$this->username.']]></username>
+                            <password><![CDATA['.$this->password.']]></password>
+                            <identifier><![CDATA[Magento_1.0.9]]></identifier>
                         </login>
                         <invoice>
-                            <companyname>'. $this->companyname .'</companyname>
-                            <contactname>'. $this->contactname .'</contactname>
-                            <email>'. $this->email .'</email>
-                            <address>'. $this->address .'</address>
-                            <zipcode>'. $this->zipcode .'</zipcode>
-                            <city>'. $this->city .'</city>
-                            <country>'. $this->country .'</country>
-                            <vat>'. $this->vatnumber .'</vat>
-                            <recurring>'. $this->recurring .'</recurring>
-                            <remark>'. $this->remark .'</remark>
-                            <layout>'. $this->layout .'</layout>
-                            <paid>'. $this->paid .'</paid>
-                            <send>'. $this->send .'</send>
+                            <companyname><![CDATA['. $this->companyname .']]></companyname>
+                            <firstname><![CDATA['. $this->firstname .']]></firstname>
+                            <lastname><![CDATA['. $this->lastname .']]></lastname>
+                            <email><![CDATA['. $this->email .']]></email>
+                            <phone><![CDATA['. $this->phone .']]></phone>
+                            <address><![CDATA['. $this->address .']]></address>
+                            <zipcode><![CDATA['. $this->zipcode .']]></zipcode>
+                            <city><![CDATA['. $this->city .']]></city>
+                            <country><![CDATA['. $this->country .']]></country>
+
+                            <delivery_companyname><![CDATA['. $this->delivery_companyname .']]></delivery_companyname>
+                            <delivery_firstname><![CDATA['. $this->delivery_firstname .']]></delivery_firstname>
+                            <delivery_lastname><![CDATA['. $this->delivery_lastname .']]></delivery_lastname>
+                            <delivery_address><![CDATA['. $this->delivery_address .']]></delivery_address>
+                            <delivery_zipcode><![CDATA['. $this->delivery_zipcode .']]></delivery_zipcode>
+                            <delivery_city><![CDATA['. $this->delivery_city .']]></delivery_city>
+                            <delivery_country><![CDATA['. $this->delivery_country .']]></delivery_country>
+
+                            <vat><![CDATA['. $this->vatnumber .']]></vat>
+                            <recurring><![CDATA['. $this->recurring .']]></recurring>
+                            <remark><![CDATA['. $this->remark .']]></remark>
+                            <layout><![CDATA['. $this->layout .']]></layout>
+                            <paid><![CDATA['. $this->paid .']]></paid>
+                            <action><![CDATA['. $this->action .']]></action>
+                            <calculation_method><![CDATA['. $this->calculation_method .']]></calculation_method>
                             <tags>';
         foreach($this->tags as $tag){
-            $string .= '<tag>'. $tag .'</tag>';
+            $string .= '<tag><![CDATA['. $tag .']]></tag>';
         }
                     
         $string .= '</tags>
@@ -403,12 +508,15 @@ class qinvoice{
         foreach($this->items as $i){
 
             $string .= '<item>
-                <quantity>'. $i['quantity'] .'</quantity>
-                <description>'. $i['description'] .'</description>
+                <code><![CDATA['. $i['code'] .']]></code>
+                <quantity><![CDATA['. $i['quantity'] .']]></quantity>
+                <description><![CDATA['. $i['description'] .']]></description>
                 <price>'. $i['price'] .'</price>
+                <price_incl>'. $i['price_incl'] .'</price_incl>
+                <price_vat>'. $i['price_vat'] .'</price_vat>
                 <vatpercentage>'. $i['vatpercentage'] .'</vatpercentage>
                 <discount>'. $i['discount'] .'</discount>
-                <categories>'. $i['categories'] .'</categories>
+                <categories><![CDATA['. $i['categories'] .']]></categories>
                 
             </item>';
         }

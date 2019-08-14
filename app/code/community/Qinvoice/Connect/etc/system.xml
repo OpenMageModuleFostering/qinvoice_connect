@@ -31,7 +31,7 @@
 							<show_in_default>1</show_in_default>
 							<show_in_website>1</show_in_website>
 							<show_in_store>1</show_in_store>
-							<comment><![CDATA[e.g. https://app.q-invoice.com/api/xml/1.0/]]></comment>				
+							<comment><![CDATA[e.g. https://app.q-invoice.com/api/xml/1.1/]]></comment>				
 						</api_url>
 						<api_username translate="label">
 							<label>API Username</label>
@@ -85,26 +85,46 @@
 							<show_in_store>1</show_in_store>
 							<comment><![CDATA[e.g. Your payment has been received.]]></comment>                    
 						</paid_remark>
-						<invoice_on_order translate="label">
-							<label>Generate invoice on order</label>
+						<invoice_trigger translate="label">
+							<label>Send invoice request on</label>
 							<frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <source_model>invoice/source_trigger</source_model>
 							<sort_order>7</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>1</show_in_website>
 							<show_in_store>1</show_in_store>
-							<comment><![CDATA[Yes: invoice for every order. No: invoice for every payment.]]></comment>
-						</invoice_on_order>
-						<send_mail translate="label">
-							<label>Send invoice to customer</label>
+							<comment><![CDATA[Select invoice trigger moment]]></comment>
+						</invoice_trigger>
+						<invoice_action translate="label">
+							<label>After request</label>
 							<frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <source_model>invoice/source_invoice</source_model>
 							<sort_order>8</sort_order>
 							<show_in_default>1</show_in_default>
 							<show_in_website>1</show_in_website>
 							<show_in_store>1</show_in_store>
-							<comment><![CDATA[Send email with invoice to customer.]]></comment>
-						</send_mail>
+							<comment><![CDATA[Create invoice and send to customer?]]></comment>
+						</invoice_action>
+						<save_relation translate="label">
+							<label>Save customer details</label>
+							<frontend_type>select</frontend_type>
+                            <source_model>invoice/source_relation</source_model>
+							<sort_order>9</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+							<comment><![CDATA[Save customer details to address book?]]></comment>
+						</save_relation>
+						<calculation_method translate="label">
+							<label>Calculation method</label>
+							<frontend_type>select</frontend_type>
+                            <source_model>invoice/source_method</source_model>
+							<sort_order>10</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>1</show_in_store>
+							<comment><![CDATA[Select leading price type]]></comment>
+						</calculation_method>
 					</fields>  
                 </invoice>
             </groups>

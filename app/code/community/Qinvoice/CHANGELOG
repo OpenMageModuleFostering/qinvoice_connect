@@ -1,5 +1,11 @@
 CHANGELOG
 
+v1.0.8 - 2014/04/08
+- Fixed type and shipping VAT
+
+v1.0.6 - 2014/01/22
+- Removed double description lines
+
 v1.0.1 - 2013/08/14
 - Added support for productgroups/attributes (qinvoice_category)
 
