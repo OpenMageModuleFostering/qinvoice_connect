@@ -176,6 +176,7 @@ class Qinvoice_Connect_Model_Order_Observer
         $invoice->firstname = $rowThree['firstname'];       // Your customers contact name
         $invoice->lastname = $rowThree['lastname'];       // Your customers contact name
         $invoice->email = $rowOne['customer_email'];                // Your customers emailaddress (invoice will be sent here)
+        $invoice->phone = $rowOne['telephone'];
         $invoice->address = $rowThree['street'];                // Self-explanatory
         $invoice->zipcode = $rowThree['postcode'];              // Self-explanatory
         $invoice->city = $rowThree['city'];                     // Self-explanatory
@@ -298,7 +299,8 @@ class Qinvoice_Connect_Model_Order_Observer
                     'code' => $productcode,
                     'description' => "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']) . $varDescription,
                     'price' => $arrData[$i]['base_price']*100,
-                    'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
+                    //'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
+                    'price_incl' => round((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
                     'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
                     'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
                     'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
@@ -317,7 +319,7 @@ class Qinvoice_Connect_Model_Order_Observer
                     'price' => $rowOne['shipping_amount']*100,
                     'price_incl' => $rowOne['shipping_incl_tax']*100,
                     'price_vat' => $rowOne['shipping_tax_amount']*100,
-                    'vatpercentage' => ($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100,
+                    'vatpercentage' => round(($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100)*100,
                     'discount' => 0,
                     'quantity' => 100,
                     'categories' => 'shipping'
@@ -468,12 +470,14 @@ class qinvoice{
                         <login mode="newInvoice">
                             <username><![CDATA['.$this->username.']]></username>
                             <password><![CDATA['.$this->password.']]></password>
+                            <identifier><![CDATA[Magento_1.0.9]]></identifier>
                         </login>
                         <invoice>
                             <companyname><![CDATA['. $this->companyname .']]></companyname>
                             <firstname><![CDATA['. $this->firstname .']]></firstname>
                             <lastname><![CDATA['. $this->lastname .']]></lastname>
                             <email><![CDATA['. $this->email .']]></email>
+                            <phone><![CDATA['. $this->phone .']]></phone>
                             <address><![CDATA['. $this->address .']]></address>
                             <zipcode><![CDATA['. $this->zipcode .']]></zipcode>
                             <city><![CDATA['. $this->city .']]></city>
