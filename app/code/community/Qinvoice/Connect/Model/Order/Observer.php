@@ -83,8 +83,9 @@ class Qinvoice_Connect_Model_Order_Observer
             $varStatus = 'Sent';
         }
         
-        $result = $db->query("SELECT item_id, product_type, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
+        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
         
+
         if(!$result) {
             //return false;
         }
@@ -167,7 +168,12 @@ class Qinvoice_Connect_Model_Order_Observer
 
 
             for($i=0;$i<count($arrData);$i++)
-            {  
+            {
+                $category = '';
+                $_productId = $arrData[$i]['product_id'];
+                $_product = Mage::getModel('catalog/product')->load($_productId);
+                $category = $_product->getData('qinvoice_category');
+  
                 $arrItemOptions = unserialize($arrData[$i]['product_options']);
 
                 $varDescription = '';
@@ -196,7 +202,7 @@ class Qinvoice_Connect_Model_Order_Observer
                     'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
                     'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
                     'quantity' => $arrData[$i]['qty_ordered']*100,
-                    'categories' => ''
+                    'categories' => $category
                     );
                 //mail('casper@expertnetwork.nl', 'vat', $arrData[$i]['tax_percent']);
                 $invoice->addItem($params);
