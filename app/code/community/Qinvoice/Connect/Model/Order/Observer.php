@@ -13,7 +13,8 @@ class Qinvoice_Connect_Model_Order_Observer
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
         $varPath = 'invoice_options/invoice/invoice_trigger';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
 
@@ -31,7 +32,8 @@ class Qinvoice_Connect_Model_Order_Observer
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
         $varPath = 'invoice_options/invoice/invoice_trigger';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
 
@@ -50,7 +52,8 @@ class Qinvoice_Connect_Model_Order_Observer
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
         $varPath = 'invoice_options/invoice/invoice_trigger';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
 
@@ -74,7 +77,8 @@ class Qinvoice_Connect_Model_Order_Observer
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
         $varPath = 'invoice_options/invoice/invoice_trigger';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
 
@@ -96,7 +100,8 @@ class Qinvoice_Connect_Model_Order_Observer
         
         $varCurrenyCode =  Mage::app()->getStore()->getCurrentCurrency()->getCode();
         // GETTING ORDER STATUS
-        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id FROM sales_flat_order WHERE entity_id=".$varOrderID);
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
         $rowOne = $resultOne->fetch(PDO::FETCH_ASSOC);
         
         
@@ -105,7 +110,8 @@ class Qinvoice_Connect_Model_Order_Observer
             $varStatus = 'Paid';
             // GETTING API URL
             $varURLPath = 'invoice_options/invoice/paid_remark';
-            $resultURL = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varURLPath."'");
+            $prefix = Mage::getConfig()->getTablePrefix();
+            $resultURL = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varURLPath."'");
             $rowURL = $resultURL->fetch(PDO::FETCH_ASSOC);
             $paid_remark = $rowURL['value'];
             $paid = 1;
@@ -120,7 +126,8 @@ class Qinvoice_Connect_Model_Order_Observer
             $varStatus = 'Sent';
         }
         
-        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM {$prefix}sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
         
 
         if(!$result) {
@@ -139,25 +146,29 @@ class Qinvoice_Connect_Model_Order_Observer
 
         // GETTING API USERNAME
         $varPath = 'invoice_options/invoice/api_username';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $username = $rowTwo['value'];
 
         // GETTING API PASSWORD
         $varPath = 'invoice_options/invoice/api_password';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $password = $rowTwo['value'];
 
         // GETTING LAYOUT CODE
         $varPath = 'invoice_options/invoice/layout_code';
-        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $layout_code = $rowTwo['value'];
 
         
         // GETTING CLIENT DETAILS
-        $resultThree = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id, vat_id FROM sales_flat_order_address WHERE entity_id='".$rowOne['billing_address_id']."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultThree = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id, vat_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['billing_address_id']."'");
         $rowThree = $resultThree->fetch(PDO::FETCH_ASSOC);
 
         $invoice = new qinvoice($username,$password);
@@ -172,7 +183,8 @@ class Qinvoice_Connect_Model_Order_Observer
         $invoice->country = $rowThree['country_id'];                 // 2 character country code: NL for Netherlands, DE for Germany etc
         $invoice->vatnumber = $rowThree['vat_id'];  
 
-        $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
         $rowFour = $resultFour->fetch(PDO::FETCH_ASSOC);
 
         $invoice->delivery_address = $rowFour['street'];                // Self-explanatory
@@ -184,25 +196,29 @@ class Qinvoice_Connect_Model_Order_Observer
         $invoice->paid = $paid;
 
         $varActionPath = 'invoice_options/invoice/save_relation';
-        $resultAction = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varActionPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultAction = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varActionPath."'");
         $rowAction = $resultAction->fetch(PDO::FETCH_ASSOC);
         $save_relation = $rowAction['value'];
 
         $invoice->saverelation = $save_relation;
          
         $varRemarkPath = 'invoice_options/invoice/invoice_remark';
-        $resultRemark = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varRemarkPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultRemark = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varRemarkPath."'");
         $rowRemark = $resultRemark->fetch(PDO::FETCH_ASSOC);
         $invoice_remark = $rowRemark['value'];
         $invoice->remark = str_replace('{order_id}',$rowOne['increment_id'],$invoice_remark) .' '. $paid_remark;                  // Self-explanatory
 
         $varActionPath = 'invoice_options/invoice/invoice_action';
-        $resultAction = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varActionPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultAction = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varActionPath."'");
         $rowAction = $resultAction->fetch(PDO::FETCH_ASSOC);
         $invoice_action = $rowAction['value'];
 
         $varLayoutPath = 'invoice_options/invoice/layout_code';
-        $resultLayout = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varLayoutPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultLayout = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varLayoutPath."'");
         $rowLayout = $resultLayout->fetch(PDO::FETCH_ASSOC);
         $invoice_layout = $rowLayout['value'];
 
@@ -225,7 +241,8 @@ class Qinvoice_Connect_Model_Order_Observer
         $invoice->setLayout($invoice_layout);
 
         $varTagPath = 'invoice_options/invoice/invoice_tag';
-        $resultTag = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varTagPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultTag = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varTagPath."'");
         $rowTag = $resultTag->fetch(PDO::FETCH_ASSOC);
         $invoice_tag = $rowTag['value'];
 
@@ -366,7 +383,8 @@ class qinvoice{
         
         // GETTING API URL
         $varURLPath = 'invoice_options/invoice/api_url';
-        $resultURL = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varURLPath."'");
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultURL = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varURLPath."'");
         $rowURL = $resultURL->fetch(PDO::FETCH_ASSOC);
         $apiURL = $rowURL['value'];
 
