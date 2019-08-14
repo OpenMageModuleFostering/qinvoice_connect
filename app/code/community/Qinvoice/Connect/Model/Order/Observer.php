@@ -7,6 +7,41 @@ class Qinvoice_Connect_Model_Order_Observer
         //parent::__construct();
     }
 
+    public function sendOnComplete($observer){
+        mail('casper@newday.sk', 'sendOnComplete', 'triggered');
+        $order = $observer->getEvent()->getOrder();
+        // GETTING TRIGGER SETTING
+        $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
+        $varPath = 'invoice_options/invoice/invoice_trigger';
+        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
+        $varOnOrder = $rowTwo['value'];
+
+        if($varOnOrder == 'complete' && $order->getState() == Mage_Sales_Model_Order::STATE_COMPLETE){
+            $this->createInvoiceForQinvoice($order->getId(), false);
+        }else{
+            return true;
+        }
+    }
+
+      public function sendOnShip($observer){
+        $shipment = $observer->getEvent()->getShipment(); 
+        $order = $shipment->getOrder(); 
+
+        // GETTING TRIGGER SETTING
+        $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
+        $varPath = 'invoice_options/invoice/invoice_trigger';
+        $resultTwo = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varPath."'");
+        $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
+        $varOnOrder = $rowTwo['value'];
+
+        if($varOnOrder == 'ship'){
+            $this->createInvoiceForQinvoice($order->getId(), false);
+        }else{
+            return true;
+        }
+    }
+
     public function sendOnOrder($observer){
         $order = $observer->getEvent()->getOrder(); 
 
@@ -122,7 +157,7 @@ class Qinvoice_Connect_Model_Order_Observer
 
         
         // GETTING CLIENT DETAILS
-        $resultThree = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode FROM sales_flat_order_address WHERE entity_id='".$rowOne['billing_address_id']."'");
+        $resultThree = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id, vat_id FROM sales_flat_order_address WHERE entity_id='".$rowOne['billing_address_id']."'");
         $rowThree = $resultThree->fetch(PDO::FETCH_ASSOC);
 
         $invoice = new qinvoice($username,$password);
@@ -134,18 +169,26 @@ class Qinvoice_Connect_Model_Order_Observer
         $invoice->address = $rowThree['street'];                // Self-explanatory
         $invoice->zipcode = $rowThree['postcode'];              // Self-explanatory
         $invoice->city = $rowThree['city'];                     // Self-explanatory
-        $invoice->country = '';                 // 2 character country code: NL for Netherlands, DE for Germany etc
-        
-        $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode FROM sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
+        $invoice->country = $rowThree['country_id'];                 // 2 character country code: NL for Netherlands, DE for Germany etc
+        $invoice->vatnumber = $rowThree['vat_id'];  
+
+        $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
         $rowFour = $resultFour->fetch(PDO::FETCH_ASSOC);
 
         $invoice->delivery_address = $rowFour['street'];                // Self-explanatory
         $invoice->delivery_zipcode = $rowFour['postcode'];              // Self-explanatory
         $invoice->delivery_city = $rowFour['city'];                     // Self-explanatory
-        $invoice->delivery_country = '';      
+        $invoice->delivery_country = $rowFour['country_id'];      
 
         $invoice->vat = '';                     // Self-explanatory
         $invoice->paid = $paid;
+
+        $varActionPath = 'invoice_options/invoice/save_relation';
+        $resultAction = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varActionPath."'");
+        $rowAction = $resultAction->fetch(PDO::FETCH_ASSOC);
+        $save_relation = $rowAction['value'];
+
+        $invoice->saverelation = $save_relation;
          
         $varRemarkPath = 'invoice_options/invoice/invoice_remark';
         $resultRemark = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varRemarkPath."'");
@@ -162,6 +205,22 @@ class Qinvoice_Connect_Model_Order_Observer
         $resultLayout = $db->query("SELECT value FROM core_config_data WHERE path LIKE '".$varLayoutPath."'");
         $rowLayout = $resultLayout->fetch(PDO::FETCH_ASSOC);
         $invoice_layout = $rowLayout['value'];
+
+      
+
+        $invoice_layout_s = @unserialize($invoice_layout);
+        if ($invoice_layout_s !== false) {
+            // serialized
+            $invoice_layout = @unserialize($invoice_layout);
+            if(isset($invoice_layout[$rowFour['country_id']])){
+                $invoice_layout = @$invoice_layout[$rowFour['country_id']];    
+            }else{
+                $invoice_layout = @$invoice_layout['default'];
+            }
+        } else {
+            // not serialized
+            $invoice_layout = $invoice_layout;
+        }
 
         $invoice->setLayout($invoice_layout);
 
@@ -370,33 +429,33 @@ class qinvoice{
     private function buildXML(){
         $string = '<request>
                         <login mode="newInvoice">
-                            <username>'.$this->username.'</username>
-                            <password>'.$this->password.'</password>
+                            <username><![CDATA['.$this->username.']]></username>
+                            <password><![CDATA['.$this->password.']]></password>
                         </login>
                         <invoice>
-                            <companyname>'. $this->companyname .'</companyname>
-                            <firstname>'. $this->firstname .'</firstname>
-                            <lastname>'. $this->lastname .'</lastname>
-                            <email>'. $this->email .'</email>
-                            <address>'. $this->address .'</address>
-                            <zipcode>'. $this->zipcode .'</zipcode>
-                            <city>'. $this->city .'</city>
-                            <country>'. $this->country .'</country>
+                            <companyname><![CDATA['. $this->companyname .']]></companyname>
+                            <firstname><![CDATA['. $this->firstname .']]></firstname>
+                            <lastname><![CDATA['. $this->lastname .']]></lastname>
+                            <email><![CDATA['. $this->email .']]></email>
+                            <address><![CDATA['. $this->address .']]></address>
+                            <zipcode><![CDATA['. $this->zipcode .']]></zipcode>
+                            <city><![CDATA['. $this->city .']]></city>
+                            <country><![CDATA['. $this->country .']]></country>
 
-                            <delivery_address>'. $this->delivery_address .'</delivery_address>
-                            <delivery_zipcode>'. $this->delivery_zipcode .'</delivery_zipcode>
-                            <delivery_city>'. $this->delivery_city .'</delivery_city>
-                            <delivery_country>'. $this->delivery_country .'</delivery_country>
+                            <delivery_address><![CDATA['. $this->delivery_address .']]></delivery_address>
+                            <delivery_zipcode><![CDATA['. $this->delivery_zipcode .']]></delivery_zipcode>
+                            <delivery_city><![CDATA['. $this->delivery_city .']]></delivery_city>
+                            <delivery_country><![CDATA['. $this->delivery_country .']]></delivery_country>
 
-                            <vat>'. $this->vatnumber .'</vat>
-                            <recurring>'. $this->recurring .'</recurring>
-                            <remark>'. $this->remark .'</remark>
-                            <layout>'. $this->layout .'</layout>
-                            <paid>'. $this->paid .'</paid>
-                            <action>'. $this->action .'</action>
+                            <vat><![CDATA['. $this->vatnumber .']]></vat>
+                            <recurring><![CDATA['. $this->recurring .']]></recurring>
+                            <remark><![CDATA['. $this->remark .']]></remark>
+                            <layout><![CDATA['. $this->layout .']]></layout>
+                            <paid><![CDATA['. $this->paid .']]></paid>
+                            <action><![CDATA['. $this->action .']]></action>
                             <tags>';
         foreach($this->tags as $tag){
-            $string .= '<tag>'. $tag .'</tag>';
+            $string .= '<tag><![CDATA['. $tag .']]></tag>';
         }
                     
         $string .= '</tags>
@@ -404,13 +463,13 @@ class qinvoice{
         foreach($this->items as $i){
 
             $string .= '<item>
-                <code>'. $i['code'] .'</code>
-                <quantity>'. $i['quantity'] .'</quantity>
-                <description>'. $i['description'] .'</description>
+                <code><![CDATA['. $i['code'] .']]></code>
+                <quantity><![CDATA['. $i['quantity'] .']]></quantity>
+                <description><![CDATA['. $i['description'] .']]></description>
                 <price>'. $i['price'] .'</price>
                 <vatpercentage>'. $i['vatpercentage'] .'</vatpercentage>
                 <discount>'. $i['discount'] .'</discount>
-                <categories>'. $i['categories'] .'</categories>
+                <categories><![CDATA['. $i['categories'] .']]></categories>
                 
             </item>';
         }

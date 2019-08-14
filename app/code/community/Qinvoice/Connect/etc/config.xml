@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Qinvoice_Connect>
-            <version>1.0.2</version>
+            <version>1.0.4</version>
         </Qinvoice_Connect>
     </modules>
     <global>
@@ -13,6 +13,24 @@
             </invoice>
         </models>
         <events>
+             <sales_order_status_after>
+                <observers>
+                    <connect>
+                        <class>invoice/order_observer</class>
+                        <method>sendOnComplete</method>
+                    </connect>
+                </observers>
+            </sales_order_status_after> 
+
+            <sales_order_shipment_save_after>
+                <observers>
+                    <connect>
+                        <class>invoice/order_observer</class>
+                        <method>sendOnShip</method>
+                    </connect>
+                </observers>
+            </sales_order_shipment_save_after>
+
             <sales_order_place_after>
                 <observers>
                     <connect>
@@ -30,7 +48,11 @@
                 </observers>
             </checkout_onepage_controller_success_action>    
         </events>
-       
+       <helpers>
+            <invoice>
+                <class>Qinvoice_Connect_Helper</class>
+            </invoice>
+        </helpers>
     </global>
 	<adminhtml>
         <acl>
