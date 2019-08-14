@@ -100,7 +100,7 @@ class Qinvoice_Connect_Model_Order_Observer
         $varCurrenyCode =  Mage::app()->getStore()->getCurrentCurrency()->getCode();
         // GETTING ORDER STATUS
         $prefix = Mage::getConfig()->getTablePrefix();
-        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
+        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id, customer_taxvat FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
         $rowOne = $resultOne->fetch(PDO::FETCH_ASSOC);
         
         
@@ -180,7 +180,7 @@ class Qinvoice_Connect_Model_Order_Observer
         $invoice->zipcode = $rowThree['postcode'];              // Self-explanatory
         $invoice->city = $rowThree['city'];                     // Self-explanatory
         $invoice->country = $rowThree['country_id'];                 // 2 character country code: NL for Netherlands, DE for Germany etc
-        $invoice->vatnumber = $rowThree['vat_id'];  
+        $invoice->vatnumber = strlen($rowThree['vat_id']) > 3 ? $rowThree['vat_id'] : $rowOne['customer_taxvat'];  
 
         $prefix = Mage::getConfig()->getTablePrefix();
         $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
@@ -308,7 +308,8 @@ class Qinvoice_Connect_Model_Order_Observer
             }
             if($rowOne['shipping_amount'] > 0)
             {
-                $params = array(    
+                $params = array(  
+                    'code' => '',  
                     'description' => trim($rowOne['shipping_description']),
                     'price' => $rowOne['shipping_amount']*100,
                     'price_inl' => $rowOne['shipping_amount']*100,
@@ -325,7 +326,6 @@ class Qinvoice_Connect_Model_Order_Observer
             
     
             $result =  $invoice->sendRequest();
-            die();
             if($result == 1){
                 //notify_to_admin('Casper Mekel','casper@newday.sk','Invoice generated!');
             }else{
@@ -415,7 +415,7 @@ class qinvoice{
     }
 
     public function addItem($params){
-        $item['code'] = $params['code'];
+        $item['code'] = (isset($params['code']) ? $params['code'] : "");
         $item['description'] = $params['description'];
         $item['price'] = $params['price'];
         $item['price_incl'] = $params['price_incl'];

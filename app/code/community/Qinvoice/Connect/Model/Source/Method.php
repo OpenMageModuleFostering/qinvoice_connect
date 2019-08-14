@@ -1,5 +1,5 @@
 <?php
-class Qinvoice_Connect_Model_Source_Calculationmethod
+class Qinvoice_Connect_Model_Source_Method
 {
   public function toOptionArray()
   {
