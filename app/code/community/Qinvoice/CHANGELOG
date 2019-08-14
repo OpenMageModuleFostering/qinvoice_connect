@@ -1,0 +1,10 @@
+CHANGELOG
+
+v1.0.6 - 2014/01/22
+- Removed double description lines
+
+v1.0.1 - 2013/08/14
+- Added support for productgroups/attributes (qinvoice_category)
+
+v1.0.0 - 2013/08/13
+- Initial release

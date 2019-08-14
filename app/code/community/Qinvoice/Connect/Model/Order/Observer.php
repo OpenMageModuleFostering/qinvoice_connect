@@ -8,7 +8,6 @@ class Qinvoice_Connect_Model_Order_Observer
     }
 
     public function sendOnComplete($observer){
-        mail('casper@newday.sk', 'sendOnComplete', 'triggered');
         $order = $observer->getEvent()->getOrder();
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
@@ -222,7 +221,13 @@ class Qinvoice_Connect_Model_Order_Observer
         $rowLayout = $resultLayout->fetch(PDO::FETCH_ASSOC);
         $invoice_layout = $rowLayout['value'];
 
-      
+        $varCalculationmethodPath = 'invoice_options/invoice/calculation_method';
+        $prefix = Mage::getConfig()->getTablePrefix();
+        $resultCalculationmethod = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varCalculationmethodPath."'");
+        $rowCalculationmethod = $resultCalculationmethod->fetch(PDO::FETCH_ASSOC);
+        $invoice_calculationmethod = $rowCalculationmethod['value'];
+
+        $invoice->calculation_method = $invoice_calculationmethod;
 
         $invoice_layout_s = @unserialize($invoice_layout);
         if ($invoice_layout_s !== false) {
@@ -270,7 +275,7 @@ class Qinvoice_Connect_Model_Order_Observer
                 {
                     for($k=0; $k <count($arrItemOptions['options']); $k++)
                     {
-                        $varDescription .= $arrItemOptions['options'][$k]['label'].": ".$arrItemOptions['options'][$k]['print_value']."\n";
+                        $varDescription .= "\n".$arrItemOptions['options'][$k]['label'].": ".$arrItemOptions['options'][$k]['print_value']."\n";
                     }
                 }
                 else
@@ -278,17 +283,20 @@ class Qinvoice_Connect_Model_Order_Observer
                 {
                     for($k=0; $k <count($arrItemOptions['attributes_info']); $k++)
                     {
-                        $varDescription .= $arrItemOptions['attributes_info'][$k]['label'].": ".$arrItemOptions['attributes_info'][$k]['value']."\n";
+                        $varDescription .= "\n".$arrItemOptions['attributes_info'][$k]['label'].": ".$arrItemOptions['attributes_info'][$k]['value']."\n";
                     }
                 }
                 else
                 {
-                    $varDescription = "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']);
+                    $varDescription = ''; //"[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']);
                 }
+               
                 $params = array(    
                     'code' => $productcode,
-                    'description' => $arrData[$i]['name'] ."\n". $varDescription,
+                    'description' => "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']) . $varDescription,
                     'price' => $arrData[$i]['base_price']*100,
+                    'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
+                    'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
                     'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
                     'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
                     'quantity' => $arrData[$i]['qty_ordered']*100,
@@ -303,6 +311,8 @@ class Qinvoice_Connect_Model_Order_Observer
                 $params = array(    
                     'description' => trim($rowOne['shipping_description']),
                     'price' => $rowOne['shipping_amount']*100,
+                    'price_inl' => $rowOne['shipping_amount']*100,
+                    'price_vat' => $rowOne['shipping_tax_amount']*100,
                     'vatpercentage' => ($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100,
                     'discount' => 0,
                     'quantity' => 100,
@@ -315,6 +325,7 @@ class Qinvoice_Connect_Model_Order_Observer
             
     
             $result =  $invoice->sendRequest();
+            die();
             if($result == 1){
                 //notify_to_admin('Casper Mekel','casper@newday.sk','Invoice generated!');
             }else{
@@ -407,6 +418,8 @@ class qinvoice{
         $item['code'] = $params['code'];
         $item['description'] = $params['description'];
         $item['price'] = $params['price'];
+        $item['price_incl'] = $params['price_incl'];
+        $item['price_vat'] = $params['price_vat'];
         $item['vatpercentage'] = $params['vatpercentage'];
         $item['discount'] = $params['discount'];
         $item['quantity'] = $params['quantity'];
@@ -471,6 +484,7 @@ class qinvoice{
                             <layout><![CDATA['. $this->layout .']]></layout>
                             <paid><![CDATA['. $this->paid .']]></paid>
                             <action><![CDATA['. $this->action .']]></action>
+                            <calculation_method><![CDATA['. $this->calculation_method .']]></calculation_method>
                             <tags>';
         foreach($this->tags as $tag){
             $string .= '<tag><![CDATA['. $tag .']]></tag>';
@@ -485,6 +499,8 @@ class qinvoice{
                 <quantity><![CDATA['. $i['quantity'] .']]></quantity>
                 <description><![CDATA['. $i['description'] .']]></description>
                 <price>'. $i['price'] .'</price>
+                <price_incl>'. $i['price_incl'] .'</price_incl>
+                <price_vat>'. $i['price_vat'] .'</price_vat>
                 <vatpercentage>'. $i['vatpercentage'] .'</vatpercentage>
                 <discount>'. $i['discount'] .'</discount>
                 <categories><![CDATA['. $i['categories'] .']]></categories>
