@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
     <name>Qinvoice_Connect</name>
-    <version>1.1.3</version>
+    <version>2.1.1</version>
     <stability>stable</stability>
     <license>GPL</license>
     <channel>community</channel>
@@ -10,9 +10,9 @@
     <description>Invoices can be generated upon a successful payment or order and will be added to your administration. Q-invoice offers you the freedom to run multiple webshops or venues but still have your bookkeeping together at one place. Generate invoices in a layout of your choosing for maximal recognition, upload bankstatements and process payment with the click of your mouse. www.q-invoice.com</description>
     <notes>Fixed issue with multiple products same SKU, different custom option</notes>
     <authors><author><name>Casper Mekel</name><user>caspermekel</user><email>info@q-invoice.com</email></author></authors>
-    <date>2015-02-26</date>
-    <time>15:05:07</time>
-    <contents><target name="magecommunity"><dir name="Qinvoice"><file name="CHANGELOG" hash="b505f62586635992441f58e1b48509b6"/><dir name="Connect"><dir name="etc"><file name="config.xml" hash="84a4748dd2b5f37c4a5af69a90aeaa2c"/><file name="system.xml" hash="0f7c10edfb8942199b277a0170babe30"/></dir><dir name="Helper"><file name="Data.php" hash="ccb4b09674319e8b20e9c06a94adfa38"/></dir><dir name="Model"><dir name="Order"><file name="Observer.Boerdereike.php" hash="cdcda959a699ac24eb3f7d8ff906f18e"/><file name="Observer.php" hash="fa3f6bf52536b97c74556a5c78cb7f4c"/></dir><dir name="Source"><file name="Attribute.php" hash="72f35ffb8cd873d2c5e1e448ff4bf4e2"/><file name="Invoice.php" hash="4661f369f7e116fd761e5fffac9efeaf"/><file name="Method.php" hash="ac6891fc7e403250b24f5b0f2d6199bc"/><file name="Relation.php" hash="89ab031937b846ab5f0bcac7ccaa31b7"/><file name="Trigger.php" hash="be2c0e4bfc32c0bdd57b4b1b58da8d63"/></dir></dir><file name="readme.txt" hash="d41d8cd98f00b204e9800998ecf8427e"/></dir><dir name="Invoice"><dir name="Order"><file name="Observer.php" hash="84e53ee2885045cebb1321901afec083"/></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Qinvoice_Connect.xml" hash="fbedefa4e926092705c6941ad28f51f8"/></dir></target></contents>
+    <date>2016-10-06</date>
+    <time>16:56:24</time>
+    <contents><target name="magecommunity"><dir name="Qinvoice"><file name="CHANGELOG" hash="f3fe0ee8957ad7362fe0961114678243"/><dir name="Connect"><dir name="Block"><dir name="Adminhtml"><dir name="System"><dir name="Config"><dir name="Form"><dir name="Field"><file name="Webshopsecret.php" hash="2157af67cdcf51307bde5efe5cee46d2"/></dir></dir></dir></dir></dir></dir><dir name="Helper"><file name="Data.php" hash="ccb4b09674319e8b20e9c06a94adfa38"/></dir><dir name="Model"><dir name="Order"><file name="Observer.Boerdereike.php" hash="141eebc8865ff9c7e231d85df1432e96"/><file name="Observer.max4home.php" hash="1f9b754b2184c0079a0d53ecc2d3fdd8"/><file name="Observer.php" hash="b7828acc3cf5bef0f76e74a098e56255"/></dir><dir name="Rewrite"><file name="Observer.php" hash="769e4618f69697b8e3ccddbb9b446fea"/><file name="Order.php" hash="a56c5c21b08c783b2a1435d21d0b2d40"/></dir><dir name="Source"><file name="Attribute.php" hash="72f35ffb8cd873d2c5e1e448ff4bf4e2"/><file name="Invoice.php" hash="4661f369f7e116fd761e5fffac9efeaf"/><file name="Method.php" hash="ac6891fc7e403250b24f5b0f2d6199bc"/><file name="Relation.php" hash="89ab031937b846ab5f0bcac7ccaa31b7"/><file name="Trigger.php" hash="366ba803beda9471e48d5d6da3baa20a"/></dir></dir><dir name="Module"><dir name="Block"><file name="Webshop_Secret_Renderer.php" hash="53039328186fd5c9fe15a3f55b2f8d16"/></dir><file name="Webshop_Secret_Renderer.php" hash="53039328186fd5c9fe15a3f55b2f8d16"/></dir><dir name="etc"><file name="config.xml" hash="46d4577f78a57d533c5292ab74dac0ec"/><file name="system.xml" hash="ed502b22f018d096417f47e62dbc31a8"/></dir><file name="readme.txt" hash="d41d8cd98f00b204e9800998ecf8427e"/></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Qinvoice_Connect.xml" hash="fbedefa4e926092705c6941ad28f51f8"/></dir></target></contents>
     <compatible/>
-    <dependencies><required><php><min>5.1.0</min><max>6.0.0</max></php><extension><name>curl</name><min>5.1</min><max>6.0</max></extension></required></dependencies>
+    <dependencies><required><php><min>5.1.0</min><max>7.0.0</max></php><extension><name>curl</name><min>5.1</min><max>6.0</max></extension></required></dependencies>
 </package>

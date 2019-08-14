@@ -3,16 +3,50 @@
 <config>
     <modules>
         <Qinvoice_Connect>
-            <version>1.1.2</version>
+            <version>2.1.1</version>
         </Qinvoice_Connect>
     </modules>
     <global>
+        <blocks>
+            <invoice>
+                <class>Qinvoice_Connect_Block</class>
+            </invoice>
+            <invoice_adminhtml>
+                <class>Qinvoice_Connect_Block_Adminhtml</class>
+            </invoice_adminhtml>
+        </blocks>
         <models>
             <invoice>
                 <class>Qinvoice_Connect_Model</class>
             </invoice>
+            <sales>
+                <rewrite>
+                    <order>Qinvoice_Connect_Model_Rewrite_Order</order>
+                </rewrite>
+            </sales>
+            <modelrewrite>
+                <class>Qinvoice_Connect_Model_Rewrite</class>
+            </modelrewrite>
         </models>
         <events>
+            <controller_front_init_before>
+                <observers>
+                    <connect>
+                        <class>invoice/order_observer</class>
+                        <method>qinvoiceCall</method>
+                    </connect>
+                </observers>
+            </controller_front_init_before>
+            <qinvoice_connect_order_status_change>
+                <observers>
+                    <qinvoice_connect_model_rewrite>
+                        <type>singleton</type>
+                        <class>modelrewrite/observer</class>
+                        <method>changeStateOrder</method>
+                    </qinvoice_connect_model_rewrite>
+                </observers>
+            </qinvoice_connect_order_status_change>
+
             <sales_order_place_after>
                 <observers>
                     <connect>

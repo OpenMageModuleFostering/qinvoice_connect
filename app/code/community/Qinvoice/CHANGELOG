@@ -1,5 +1,15 @@
 CHANGELOG
 
+v2.0.1 
+ - Added 'On complete' trigger
+ - Added 
+
+ 
+v1.1.4 - 2015/05/05
+- Updated for use with API v1.2 (backwards compatible with v1.1)
+- Added functionality to store resource ID after creation
+- Added functionality to update invoice with payment
+
 v1.1.3 - 2015/02/26
 - Fixed issue with multiple products same SKU, different custom option
 

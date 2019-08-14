@@ -224,6 +224,8 @@ class Qinvoice_Connect_Model_Order_Observer
         $d_date->setDate($delivery_date[0], $delivery_date[1], $delivery_date[2]);
         $delivery_date = $d_date->format('l d-m-Y');
 
+        $invoice->addTag($delivery_date);
+
         $invoice_remark = $rowRemark['value'];
         $invoice_remark = str_replace('{order_id}',$rowOne['increment_id'],$invoice_remark);
         $invoice_remark = str_replace('{shipping_description}',$rowOne['shipping_description'],$invoice_remark);
