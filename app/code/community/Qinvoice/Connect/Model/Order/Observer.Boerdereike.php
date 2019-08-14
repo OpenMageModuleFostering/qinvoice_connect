@@ -100,7 +100,7 @@ class Qinvoice_Connect_Model_Order_Observer
         $varCurrenyCode =  Mage::app()->getStore()->getCurrentCurrency()->getCode();
         // GETTING ORDER STATUS
         $prefix = Mage::getConfig()->getTablePrefix();
-        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id, customer_taxvat FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
+        $resultOne = $db->query("SELECT entity_id, status, coupon_code, customer_email, base_currency_code, shipping_description, base_discount_amount, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id, customer_taxvat FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
         $rowOne = $resultOne->fetch(PDO::FETCH_ASSOC);
         
         
@@ -187,9 +187,9 @@ class Qinvoice_Connect_Model_Order_Observer
         $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
         $rowFour = $resultFour->fetch(PDO::FETCH_ASSOC);
 
-        $invoice->delivery_companyname = $rowFour['company'];       // Your customers company name
-        $invoice->delivery_firstname = $rowFour['firstname'];       // Your customers contact name
-        $invoice->delivery_lastname = $rowFour['lastname'];       // Your customers contact name
+        $invoice->delivery_companyname = $rowFour['delivery_company'];       // Your customers company name
+        $invoice->delivery_firstname = $rowFour['delivery_firstname'];       // Your customers contact name
+        $invoice->delivery_lastname = $rowFour['delivery_lastname'];       // Your customers contact name
         $invoice->delivery_address = $rowFour['street'];                // Self-explanatory
         $invoice->delivery_zipcode = $rowFour['postcode'];              // Self-explanatory
         $invoice->delivery_city = $rowFour['city'];                     // Self-explanatory
@@ -206,16 +206,30 @@ class Qinvoice_Connect_Model_Order_Observer
         $save_relation = $rowAction['value'];
 
         $invoice->saverelation = $save_relation;
+         
+        $ddc_data = $db->query("SELECT delivery_date, customer_comment FROM sales_ddc_order WHERE order_id = '".$varOrderID."'");
+        $ddc_data_array = $ddc_data->fetch(PDO::FETCH_ASSOC);
 
         $varRemarkPath = 'invoice_options/invoice/invoice_remark';
         $prefix = Mage::getConfig()->getTablePrefix();
         $resultRemark = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varRemarkPath."'");
         $rowRemark = $resultRemark->fetch(PDO::FETCH_ASSOC);
         
+        $delivery_date = strlen($_POST['delivery_date']) > 0 ? $_POST['delivery_date'] : $ddc_data_array['delivery_date'];
+        $delivery_date = explode(" ", $delivery_date);
+        $delivery_date = $delivery_date[0];
+        $delivery_date = explode("-",$delivery_date);
+
+        $d_date = new DateTime();
+        $d_date->setDate($delivery_date[0], $delivery_date[1], $delivery_date[2]);
+        $delivery_date = $d_date->format('l d-m-Y');
+
         $invoice_remark = $rowRemark['value'];
         $invoice_remark = str_replace('{order_id}',$rowOne['increment_id'],$invoice_remark);
         $invoice_remark = str_replace('{shipping_description}',$rowOne['shipping_description'],$invoice_remark);
-        
+        $invoice_remark = str_replace('{delivery_date}',$delivery_date,$invoice_remark); 
+        $invoice_remark = str_replace('{customer_comment}',strlen($_POST['onestepcheckout_comments']) > 0 ? $_POST['onestepcheckout_comments'] : $ddc_data_array['customer_comment'],$invoice_remark); 
+
         $invoice->remark = $invoice_remark ."\n". $paid_remark;
 
         $varActionPath = 'invoice_options/invoice/invoice_action';
@@ -304,7 +318,7 @@ class Qinvoice_Connect_Model_Order_Observer
                 foreach($product_attributes as $pa){
                     if(isset($_product[$pa]))
                     {
-                        $varDescription .= "\n". $attributeArray[$pa] .': '. $_product[$pa];
+                        $varDescription .= " ". $_product[$pa];
                     }
                 }
 
@@ -342,7 +356,7 @@ class Qinvoice_Connect_Model_Order_Observer
                
                 $params = array(    
                     'code' => $productcode,
-                    'description' => "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']) . $varDescription,
+                    'description' => trim($arrData[$i]['name']) . $varDescription,
                     'price' => $arrData[$i]['base_price']*100,
                     //'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
                     'price_incl' => round(((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100),
@@ -379,7 +393,23 @@ class Qinvoice_Connect_Model_Order_Observer
                 
             }
 
-            
+             if($rowOne['base_discount_amount'] > 0)
+            {
+                $params = array(  
+                    'code' => '',  
+                    'description' => trim($rowOne['coupon_code']),
+                    'price' => $rowOne['base_discount_amount']*100,
+                    'price_incl' => $rowOne['base_discount_amount']*100,
+                    'price_vat' => 0,
+                    'vatpercentage' => 0,
+                    'discount' => 0,
+                    'quantity' => 100,
+                    'categories' => 'discount'
+                    );
+
+                $invoice->addItem($params);
+                
+            }
             
     
             $result =  $invoice->sendRequest();

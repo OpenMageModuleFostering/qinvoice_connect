@@ -1,5 +1,8 @@
 CHANGELOG
 
+v1.1.0 - 2014/06/25
+- Added attributes for display on item line
+
 v1.0.8 - 2014/04/08
 - Fixed type and shipping VAT
 
