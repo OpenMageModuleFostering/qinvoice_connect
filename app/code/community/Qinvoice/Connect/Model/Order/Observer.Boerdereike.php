@@ -362,7 +362,7 @@ class Qinvoice_Connect_Model_Order_Observer
                     'price_incl' => round(((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100),
                     'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
                     'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
-                    'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
+                    'discount' => 0,
                     'quantity' => $arrData[$i]['qty_ordered']*100,
                     'categories' => $category
                     );
@@ -393,23 +393,51 @@ class Qinvoice_Connect_Model_Order_Observer
                 
             }
 
-             if($rowOne['base_discount_amount'] > 0)
-            {
-                $params = array(  
-                    'code' => '',  
-                    'description' => trim($rowOne['coupon_code']),
-                    'price' => $rowOne['base_discount_amount']*100,
-                    'price_incl' => $rowOne['base_discount_amount']*100,
+            // if($rowOne['base_discount_amount'] > 0)
+            // {
+            //     $params = array(  
+            //         'code' => '',  
+            //         'description' => trim($rowOne['coupon_code']),
+            //         'price' => $rowOne['base_discount_amount']*100,
+            //         'price_incl' => $rowOne['base_discount_amount']*100,
+            //         'price_vat' => 0,
+            //         'vatpercentage' => 0,
+            //         'discount' => 0,
+            //         'quantity' => 100,
+            //         'categories' => 'discount'
+            //         );
+
+            //     $invoice->addItem($params);
+                
+            // }
+
+        $couponCode = $rowOne['coupon_code'];
+        //echo $couponCode;
+        //print_r($order);
+       // $couponCode = $orderDetails['coupon_code'];
+
+        if($couponCode > ''){
+            $oCoupon = Mage::getModel('salesrule/coupon')->load($couponCode, 'code');
+            $oRule = Mage::getModel('salesrule/rule')->load($oCoupon->getRuleId());
+            //var_dump($oRule->getData());
+
+            $params = array(  
+                    'code' => 'DSCNT',  
+                    'description' => $couponCode,
+                    'price' => ($rowOne['base_subtotal'] * ($oRule->getDiscountAmount()/100))*100,
+                    'price_incl' => ($rowOne['base_subtotal'] * ($oRule->getDiscountAmount()/100))*100,
                     'price_vat' => 0,
                     'vatpercentage' => 0,
                     'discount' => 0,
-                    'quantity' => 100,
+                    'quantity' => -100,
                     'categories' => 'discount'
                     );
 
-                $invoice->addItem($params);
-                
-            }
+            $invoice->addItem($params);
+        }
+        
+
+
             
     
             $result =  $invoice->sendRequest();

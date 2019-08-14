@@ -102,7 +102,7 @@ class Qinvoice_Connect_Model_Order_Observer
         $varCurrenyCode =  Mage::app()->getStore()->getCurrentCurrency()->getCode();
         // GETTING ORDER STATUS
         $prefix = Mage::getConfig()->getTablePrefix();
-        $resultOne = $db->query("SELECT entity_id, status, customer_email, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id, customer_taxvat FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
+        $resultOne = $db->query("SELECT entity_id, status, customer_email, coupon_code, base_currency_code, shipping_description, shipping_amount, shipping_tax_amount, increment_id, grand_total, total_paid, billing_address_id, shipping_address_id, customer_taxvat, base_subtotal FROM {$prefix}sales_flat_order WHERE entity_id=".$varOrderID);
         $rowOne = $resultOne->fetch(PDO::FETCH_ASSOC);
         
         
@@ -128,7 +128,7 @@ class Qinvoice_Connect_Model_Order_Observer
         }
         
         $prefix = Mage::getConfig()->getTablePrefix();
-        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM {$prefix}sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL GROUP BY sku HAVING (order_id > 0) ORDER BY item_id desc");
+        $result = $db->query("SELECT item_id, product_type, product_id, product_options, order_id, sku, name, description, qty_ordered, base_price, tax_percent, tax_amount, base_discount_amount FROM {$prefix}sales_flat_order_item WHERE order_id=".$varOrderID." AND parent_item_id IS NULL  HAVING (order_id > 0) ORDER BY item_id desc");
         
 
         if(!$result) {
@@ -294,7 +294,7 @@ class Qinvoice_Connect_Model_Order_Observer
         }
 
 
-        
+       //print_r($order);
 
         for($i=0;$i<count($arrData);$i++)
         {
@@ -359,7 +359,7 @@ class Qinvoice_Connect_Model_Order_Observer
                 'price_incl' => round(((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100),
                 'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
                 'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
-                'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
+                'discount' => 0,
                 'quantity' => $arrData[$i]['qty_ordered']*100,
                 'categories' => $category
                 );
@@ -371,7 +371,7 @@ class Qinvoice_Connect_Model_Order_Observer
         if($rowOne['shipping_amount'] > 0)
         {
             $params = array(  
-                'code' => '',  
+                'code' => 'SHPMNT',  
                 'description' => trim($rowOne['shipping_description']),
                 'price' => $rowOne['shipping_amount']*100,
                 'price_incl' => $rowOne['shipping_incl_tax']*100,
@@ -386,10 +386,64 @@ class Qinvoice_Connect_Model_Order_Observer
             
         }
 
-            
-            
+        // $order = Mage::getModel('sales/order')->loadByIncrementId($varOrderID);
+
+        // $orderDetails = $order->getData();
+
+        $couponCode = $rowOne['coupon_code'];
+        //echo $couponCode;
+        //print_r($order);
+       // $couponCode = $orderDetails['coupon_code'];
+
+        if($couponCode > ''){
+            $oCoupon = Mage::getModel('salesrule/coupon')->load($couponCode, 'code');
+            $oRule = Mage::getModel('salesrule/rule')->load($oCoupon->getRuleId());
+            var_dump($oRule->getData());
+
+            $ruleData = $oRule->getData();
+
+            $discount = $ruleData['discount_amount'];
+            $params = array(  
+                    'code' => 'DSCNT',  
+                    'description' => $couponCode,
+                    'price' => ($rowOne['base_subtotal'] * ($discount/100))*100,
+                    'price_incl' => ($rowOne['base_subtotal'] * ($discount/100))*100,
+                    'price_vat' => 0,
+                    'vatpercentage' => 0,
+                    'discount' => 0,
+                    'quantity' => -100,
+                    'categories' => 'discount'
+                    );
+
+            $invoice->addItem($params);
+        }
+
+        
+        // $coupon = Mage::getModel('salesrule/rule');
+        // $couponCollection = $coupon->getCollection();
+        // foreach($couponCollection as $c){
+        //     print_r($c);
+        //     echo 'Code:'.$c->getCode().'--->Discount Amount:'.$c->getDiscountAmount().'<br />';
+
+        //     $params = array(  
+        //         'code' => 'DSCNT',  
+        //         'description' => $c->getCode(),
+        //         'price' => $rowOne['base_subtotal'] * ($c->getDiscountAmount()/100),
+        //         'price_incl' => $rowOne['base_subtotal'] * ($c->getDiscountAmount()/100),
+        //         'price_vat' => 0,
+        //         'vatpercentage' => 0,
+        //         'discount' => 0,
+        //         'quantity' => -100,
+        //         'categories' => 'discount'
+        //         );
+
+        //     $invoice->addItem($params);
+
+        // }
 
         $result =  $invoice->sendRequest();
+
+       
         if($result != 1){
             $this->notify_admin('Qinvoice Connect Error','Could not send invoice for order '. $order_id);
         }
@@ -531,7 +585,7 @@ class qinvoice{
                         <login mode="newInvoice">
                             <username><![CDATA['.$this->username.']]></username>
                             <password><![CDATA['.$this->password.']]></password>
-                            <identifier><![CDATA[Magento_1.0.9]]></identifier>
+                            <identifier><![CDATA[Magento_1.1.2]]></identifier>
                         </login>
                         <invoice>
                             <companyname><![CDATA['. $this->companyname .']]></companyname>
