@@ -3,7 +3,7 @@
     "type": "magento-module",
     "license": "GPL",
     "homepage": "",
-    "description": "Connects to q-invoice for sending invoices.",
+    "description": "Automatically generate and send PDF invoices for every order to your customers through q-invoice.com",
     "authors": [
     {
         "name": "Casper Mekel",
