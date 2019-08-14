@@ -8,57 +8,60 @@ class Qinvoice_Connect_Model_Order_Observer
     }
 // 
     public function qinvoiceCall(){
-        if(Mage::app()->getRequest()->getParam('qc')){
 
+        if(Mage::app()->getRequest()->getParam('qc') > ''){
 
-            $data = explode("|", Mage::app()->getRequest()->getParam('qc_data'));
+            if(in_array(Mage::app()->getRequest()->getParam('qc'), array('test','stock','export','stores'))){
 
-            $string = false;
-            //print_r($data);
-            foreach($data as $d){
-                $values = explode("=", $d);
+                $data = explode("|", Mage::app()->getRequest()->getParam('qc_data'));
 
-                switch($values[0]){
-                    case 'check':
-                        $check = $values[1];
-                    break;
-                    default:
-                        if($string != false){
-                            $string .= '|';
-                        }
-                        $string .= $values[0] .'='. $values[1];
-                        $params[$values[0]] = $values[1];
-                    break;
+                $string = false;
+                //print_r($data);
+                foreach($data as $d){
+                    $values = explode("=", $d);
+
+                    switch($values[0]){
+                        case 'check':
+                            $check = $values[1];
+                        break;
+                        default:
+                            if($string != false){
+                                $string .= '|';
+                            }
+                            $string .= $values[0] .'='. $values[1];
+                            $params[$values[0]] = $values[1];
+                        break;
+                    }
+                    
+                }   
+
+               
+                $secret = Mage::getStoreConfig('invoice_options/invoice/webshop_secret','default');
+
+                if(md5($string.$secret) != $check){
+                    exit('Incorrect checksum. Check your secret key.');
+                    return false;
                 }
-                
-            }   
 
-           
-            $secret = Mage::getStoreConfig('invoice_options/invoice/webshop_secret','default');
 
-            if(md5($string.$secret) != $check){
-                exit('Incorrect checksum. Check your secret key.');
-                return false;
+
+                switch(Mage::app()->getRequest()->getParam('qc')){
+                    case 'test':
+                        echo 'test ok';
+                    break;
+                    case 'stock':
+                        echo $this->updateStock($params);
+                    break;
+                    case 'export':
+                        echo $this->exportCatalog($params);
+                    break;
+                    case 'stores':
+                        echo $this->listStores();
+                    break;
+
+                }
+                exit();
             }
-
-
-
-            switch(Mage::app()->getRequest()->getParam('qc')){
-                case 'test':
-                    echo 'test ok';
-                break;
-                case 'stock':
-                    echo $this->updateStock($params);
-                break;
-                case 'export':
-                    echo $this->exportCatalog($params);
-                break;
-                case 'stores':
-                    echo $this->listStores();
-                break;
-
-            }
-            exit();
         }
     }
     public function updateStock($params){
@@ -194,9 +197,10 @@ class Qinvoice_Connect_Model_Order_Observer
 
         if($invoice_trigger == 'order'){
             $this->createInvoiceForQinvoice($order->getId(), false);
-        }else{
-            return true;
         }
+        //else{
+        //     return true;
+        // }
     }
 
     public function sendOnPayment($observer){
@@ -210,9 +214,25 @@ class Qinvoice_Connect_Model_Order_Observer
 
         if($invoice_trigger == 'payment'){
             $this->createInvoiceForQinvoice($order_ids[0], true);
-        }else{
-            return true;
-        }        
+        }
+
+        // else{
+        //     return true;
+        // }        
+    }
+
+    public function orderStatusChange($observer){
+
+        // print_r($event);
+        $event = $observer->getEvent();
+        $order = $event->getOrder(); 
+        
+        $invoice_trigger = Mage::getStoreConfig('invoice_options/invoice/invoice_trigger');
+        if($order->getState() == Mage_Sales_Model_Order::STATE_COMPLETE && $invoice_trigger == 'complete'){
+            $this->createInvoiceForQinvoice($order->getId(), true);
+        }
+        // exit();
+
     }
     public function createInvoiceForQinvoice($varOrderID,$ifPaid = false)
     {
@@ -659,7 +679,7 @@ class qinvoice{
                         <login mode="newInvoice">
                             <username><![CDATA['.$this->username.']]></username>
                             <password><![CDATA['.$this->password.']]></password>
-                            <identifier><![CDATA[Magento_1.1.2]]></identifier>
+                            <identifier><![CDATA[Magento_2.1.2]]></identifier>
                         </login>
                         <invoice>
                             <companyname><![CDATA['. $this->companyname .']]></companyname>

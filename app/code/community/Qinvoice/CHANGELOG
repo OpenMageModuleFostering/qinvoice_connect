@@ -1,9 +1,13 @@
 CHANGELOG
 
+v2.1.2
+- Fixed bug
+
+v2.1.1
+- Added support for updating stock
+
 v2.0.1 
  - Added 'On complete' trigger
- - Added 
-
  
 v1.1.4 - 2015/05/05
 - Updated for use with API v1.2 (backwards compatible with v1.1)

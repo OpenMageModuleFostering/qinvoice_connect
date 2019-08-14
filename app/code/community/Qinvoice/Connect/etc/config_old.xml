@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Qinvoice_Connect>
-            <version>2.1.2</version>
+            <version>2.1.1</version>
         </Qinvoice_Connect>
     </modules>
     <global>
@@ -40,7 +40,6 @@
             <qinvoice_connect_order_status_change>
                 <observers>
                     <connect>
-                        <type>singleton</type>
                         <class>invoice/order_observer</class>
                         <method>orderStatusChange</method>
                     </connect>

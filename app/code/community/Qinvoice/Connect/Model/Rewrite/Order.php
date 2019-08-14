@@ -23,49 +23,12 @@ class Qinvoice_Connect_Model_Rewrite_Order extends Mage_Sales_Model_Order{
 	        $history->setIsCustomerNotified($isCustomerNotified); // for backwards compatibility
 	    }
 
-	    Mage::log("Store ID: ". $this->getStoreId());
-
-	    $varActionPath = 'invoice_options/invoice/invoice_trigger';
-        $trigger = Mage::getStoreConfig($varActionPath,$this->getStoreId()); 
-
-        Mage::log("Config: ". $trigger);
-
-
-	    // GETTING TRIGGER SETTING
-        $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
-        $varPath = 'invoice_options/invoice/api_username';
-        $prefix = Mage::getConfig()->getTablePrefix();
-        $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
-        $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
-        $varOnOrder = $rowTwo['value'];
-
-        if($varOnOrder == 'complete' && $order->getState() == Mage_Sales_Model_Order::STATE_COMPLETE){
-            $this->createInvoiceForQinvoice($order->getId(), false);
-        }else{
-            return true;
-        }
-
-	    switch($state){
-	    	case 'complete': // shipped?
-	    		if($trigger == 'complete'){
-	    			// send request
-	    		}
-	    	break;
-	    	case 'processing': // after payment?
-	    		if($trigger == 'payment'){
-	    			// send request
-	    		}
-	    		// update invoice
-	    	break;
-	    	case 'new': // new order
-	    		if($trigger == 'order'){
-	    			// send request
-	    		}
-	    	break;
-	    }
+	 	// echo 'hier';
 
 	    Mage::dispatchEvent('qinvoice_connect_order_status_change', array('order' => $this, 'state' => $state, 'status' => $status, 'comment' => $comment, 'isCustomerNotified' => $isCustomerNotified));              
-	    Mage::log("Qinvoice_Connect_Model_Rewrite_Order Changing order to STATE ".$state." STATUS ".$status);
+	    // Mage::log("Qinvoice_Connect_Model_Rewrite_Order Changing order to STATE ".$state." STATUS ".$status);
+
+	    // exit('exit');
 	    return $this;
 	}
 }
