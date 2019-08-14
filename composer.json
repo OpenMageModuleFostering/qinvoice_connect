@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/Qinvoice_Connect",
+    "type": "magento-module",
+    "license": "GPL",
+    "homepage": "",
+    "description": "Connects to q-invoice for sending invoices.",
+    "authors": [
+    {
+        "name": "Casper Mekel",
+        "email": "info@q-invoice.com"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}

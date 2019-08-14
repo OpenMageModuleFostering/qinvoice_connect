@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!-- app/code/local/Qinvoice/Connect/etc/config.xml -->
+<config>
+    <modules>
+        <Qinvoice_Connect>
+            <version>1.0.0</version>
+        </Qinvoice_Connect>
+    </modules>
+    <global>
+        <models>
+            <invoice>
+                <class>Qinvoice_Connect_Model</class>
+            </invoice>
+        </models>
+        <events>
+            <sales_order_place_after>
+                <observers>
+                    <connect>
+                        <class>invoice/order_observer</class>
+                        <method>sendOnOrder</method>
+                    </connect>
+                </observers>
+            </sales_order_place_after> 
+            <checkout_onepage_controller_success_action>
+                <observers>
+                    <connect>
+                        <class>invoice/order_observer</class>
+                        <method>sendOnPayment</method>
+                    </connect>
+                </observers>
+            </checkout_onepage_controller_success_action>    
+        </events>
+       
+    </global>
+	<adminhtml>
+        <acl>
+            <resources>
+                <admin>
+                    <children>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <invoice_options>
+                                            <title>Store Hello World Module Section</title>
+                                        </invoice_options>
+                                    </children>
+                                </config>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+    </adminhtml>
+	
+</config> 

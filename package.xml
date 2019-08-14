@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+    <name>Qinvoice_Connect</name>
+    <version>1.0.0</version>
+    <stability>stable</stability>
+    <license>GPL</license>
+    <channel>community</channel>
+    <extends/>
+    <summary>Connects to q-invoice for sending invoices.</summary>
+    <description>Manage your financial adminstration with q-invoice. All orders are invoiced through q-invoice and automatically added to your administration.</description>
+    <notes>Initial release.</notes>
+    <authors><author><name>Casper Mekel</name><user>caspermekel</user><email>info@q-invoice.com</email></author></authors>
+    <date>2013-08-14</date>
+    <time>08:44:13</time>
+    <contents><target name="magecommunity"><dir name="Qinvoice"><dir name="Connect"><dir name="Model"><dir name="Order"><file name="Observer.php" hash="9abf5f820e75ea2e1b0f6e6eab74eca9"/></dir></dir><dir name="etc"><file name="config.xml" hash="2b8a24a7f27977c3ddd27abae710a995"/><file name="system.xml" hash="0146af102e16b6a8450aee736085e00f"/></dir></dir><dir name="Invoice_"><dir name="Helper"><file name="Data.php" hash="b17b2a7e7d551b9b24924d667759febb"/></dir><dir name="Order"><file name="Observer.php" hash="16bc431c2fb1c47f006ce7e0840683c5"/></dir><dir name="etc"><file name="config.xml" hash="dab71cf14d17e66a498adc4fe5e17f7d"/><file name="configold.xml" hash="190809fc9045610c7749b762b8568ced"/><file name="system.xml" hash="b8047d3ed2e8d3adcc12eb0b49ef25fc"/></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Qinvoice_Connect.xml" hash="fbedefa4e926092705c6941ad28f51f8"/></dir></target></contents>
+    <compatible/>
+    <dependencies><required><php><min>5.1.0</min><max>6.0.0</max></php><package><name>Mage_Core_Modules</name><channel>community</channel><min>1.6.0.0</min><max>1.7.0</max></package><extension><name>curl</name><min>5.1</min><max>6.0</max></extension></required></dependencies>
+</package>
