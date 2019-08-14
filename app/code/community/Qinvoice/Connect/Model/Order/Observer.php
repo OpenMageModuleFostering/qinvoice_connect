@@ -186,6 +186,9 @@ class Qinvoice_Connect_Model_Order_Observer
         $resultFour = $db->query("SELECT firstname, lastname, company, email, telephone, street, city, region, postcode, country_id FROM {$prefix}sales_flat_order_address WHERE entity_id='".$rowOne['shipping_address_id']."'");
         $rowFour = $resultFour->fetch(PDO::FETCH_ASSOC);
 
+        $invoice->delivery_companyname = $rowFour['delivery_company'];       // Your customers company name
+        $invoice->delivery_firstname = $rowFour['delivery_firstname'];       // Your customers contact name
+        $invoice->delivery_lastname = $rowFour['delivery_lastname'];       // Your customers contact name
         $invoice->delivery_address = $rowFour['street'];                // Self-explanatory
         $invoice->delivery_zipcode = $rowFour['postcode'];              // Self-explanatory
         $invoice->delivery_city = $rowFour['city'];                     // Self-explanatory
@@ -312,7 +315,7 @@ class Qinvoice_Connect_Model_Order_Observer
                     'code' => '',  
                     'description' => trim($rowOne['shipping_description']),
                     'price' => $rowOne['shipping_amount']*100,
-                    'price_inl' => $rowOne['shipping_amount']*100,
+                    'price_incl' => $rowOne['shipping_incl_tax']*100,
                     'price_vat' => $rowOne['shipping_tax_amount']*100,
                     'vatpercentage' => ($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100,
                     'discount' => 0,
@@ -369,6 +372,9 @@ class qinvoice{
     public $zipcode;
     public $city;
     public $country;
+    public $delivery_companyname;
+    public $delivery_firstname;
+    public $delivery_lastname;
     public $delivery_address;
     public $delivery_zipcode;
     public $delivery_city;
@@ -473,6 +479,9 @@ class qinvoice{
                             <city><![CDATA['. $this->city .']]></city>
                             <country><![CDATA['. $this->country .']]></country>
 
+                            <delivery_companyname><![CDATA['. $this->delivery_companyname .']]></delivery_companyname>
+                            <delivery_firstname><![CDATA['. $this->delivery_firstname .']]></delivery_firstname>
+                            <delivery_lastname><![CDATA['. $this->delivery_lastname .']]></delivery_lastname>
                             <delivery_address><![CDATA['. $this->delivery_address .']]></delivery_address>
                             <delivery_zipcode><![CDATA['. $this->delivery_zipcode .']]></delivery_zipcode>
                             <delivery_city><![CDATA['. $this->delivery_city .']]></delivery_city>

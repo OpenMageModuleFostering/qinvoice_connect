@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Qinvoice_Connect>
-            <version>1.0.7</version>
+            <version>1.0.8</version>
         </Qinvoice_Connect>
     </modules>
     <global>
