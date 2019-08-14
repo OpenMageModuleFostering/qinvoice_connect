@@ -1,18 +1,19 @@
 <?xml version="1.0"?>
 <package>
     <name>Qinvoice_Connect</name>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <stability>stable</stability>
     <license>GPL</license>
     <channel>community</channel>
     <extends/>
     <summary>Automatically generate and send PDF invoices for every order to your customers through q-invoice.com</summary>
     <description>Invoices can be generated upon a successful payment or order and will be added to your administration. Q-invoice offers you the freedom to run multiple webshops or venues but still have your bookkeeping together at one place. Generate invoices in a layout of your choosing for maximal recognition, upload bankstatements and process payment with the click of your mouse. www.q-invoice.com</description>
-    <notes>Compatible with v1.9.1</notes>
+    <notes>Compatible with v1.9 and 1.8&#xD;
+Support for bundled products</notes>
     <authors><author><name>Casper Mekel</name><user>caspermekel</user><email>info@q-invoice.com</email></author></authors>
-    <date>2014-11-10</date>
-    <time>16:22:54</time>
-    <contents><target name="magecommunity"><dir name="Qinvoice"><file name="CHANGELOG" hash="fe63e41117f38a39736c3354a7b1d11d"/><dir name="Connect"><dir name="etc"><file name="config.xml" hash="c6d5f3ebe9fef8eae4641627488e4a77"/><file name="system.xml" hash="0f7c10edfb8942199b277a0170babe30"/></dir><dir name="Helper"><file name="Data.php" hash="ccb4b09674319e8b20e9c06a94adfa38"/></dir><dir name="Model"><dir name="Order"><file name="Observer.Boerdereike.php" hash="8ecdeaa4e9a41de7d5debfaf22967761"/><file name="Observer.php" hash="d02a784a89e10ef46a226a66b79cbd5c"/></dir><dir name="Source"><file name="Attribute.php" hash="72f35ffb8cd873d2c5e1e448ff4bf4e2"/><file name="Invoice.php" hash="4661f369f7e116fd761e5fffac9efeaf"/><file name="Method.php" hash="ac6891fc7e403250b24f5b0f2d6199bc"/><file name="Relation.php" hash="89ab031937b846ab5f0bcac7ccaa31b7"/><file name="Trigger.php" hash="be2c0e4bfc32c0bdd57b4b1b58da8d63"/></dir></dir><file name="readme.txt" hash="d41d8cd98f00b204e9800998ecf8427e"/></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Qinvoice_Connect.xml" hash="fbedefa4e926092705c6941ad28f51f8"/></dir></target></contents>
+    <date>2014-11-14</date>
+    <time>11:06:48</time>
+    <contents><target name="magecommunity"><dir name="Qinvoice"><file name="CHANGELOG" hash="fe63e41117f38a39736c3354a7b1d11d"/><dir name="Connect"><dir name="Helper"><file name="Data.php" hash="ccb4b09674319e8b20e9c06a94adfa38"/></dir><dir name="Model"><dir name="Order"><file name="Observer.Boerdereike.php" hash="8ecdeaa4e9a41de7d5debfaf22967761"/><file name="Observer.php" hash="56c978beaeded1e98c65bfdf05554703"/></dir><dir name="Source"><file name="Attribute.php" hash="72f35ffb8cd873d2c5e1e448ff4bf4e2"/><file name="Invoice.php" hash="4661f369f7e116fd761e5fffac9efeaf"/><file name="Method.php" hash="ac6891fc7e403250b24f5b0f2d6199bc"/><file name="Relation.php" hash="89ab031937b846ab5f0bcac7ccaa31b7"/><file name="Trigger.php" hash="be2c0e4bfc32c0bdd57b4b1b58da8d63"/></dir></dir><dir name="etc"><file name="config.xml" hash="2c0d57f3c6a0b7874d8263e268dbc4c6"/><file name="system.xml" hash="0f7c10edfb8942199b277a0170babe30"/></dir><file name="readme.txt" hash="d41d8cd98f00b204e9800998ecf8427e"/></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Qinvoice_Connect.xml" hash="fbedefa4e926092705c6941ad28f51f8"/></dir></target></contents>
     <compatible/>
     <dependencies><required><php><min>5.1.0</min><max>6.0.0</max></php><extension><name>curl</name><min>5.1</min><max>6.0</max></extension></required></dependencies>
 </package>

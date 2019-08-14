@@ -11,9 +11,7 @@ class Qinvoice_Connect_Model_Order_Observer
         return false;
         $order = $observer->getEvent()->getOrder();
 
-       
-      //  print_r($order);
-        //die();
+
 
         // GETTING TRIGGER SETTING
         $db = Mage::getSingleton('core/resource')->getConnection('core_write');             
@@ -22,9 +20,6 @@ class Qinvoice_Connect_Model_Order_Observer
         $resultTwo = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varPath."'");
         $rowTwo = $resultTwo->fetch(PDO::FETCH_ASSOC);
         $varOnOrder = $rowTwo['value'];
-
-        
-        mail('caspermekel@gmail.com','MAGE191','sendOnComplete '. $varOnOrder );
 
         if($varOnOrder == 'complete' && $order->getState() == Mage_Sales_Model_Order::STATE_COMPLETE){
             $this->createInvoiceForQinvoice($order->getId(), false);
@@ -36,10 +31,6 @@ class Qinvoice_Connect_Model_Order_Observer
     public function sendOnShip($observer){
         return false;
         $shipment = $observer->getEvent()->getShipment(); 
-
-        mail('caspermekel@gmail.com','MAGE191','sendOnShip');
-        print_r($order);
-        die();
 
         $order = $shipment->getOrder(); 
 
@@ -75,11 +66,7 @@ class Qinvoice_Connect_Model_Order_Observer
             return true;
         }
     }
-    /**
-     * Exports new orders to an xml file
-     * @param Varien_Event_Observer $observer
-     * @return Feed_Sales_Model_Order_Observer
-     */
+
     public function sendOnPayment($observer){
         // Gets called even when other payment method is choosen.
         
@@ -102,6 +89,8 @@ class Qinvoice_Connect_Model_Order_Observer
     }
     public function createInvoiceForQinvoice($varOrderID,$ifPaid = false)
     {
+
+
         $paid = 0;
         $db = Mage::getSingleton('core/resource')->getConnection('core_write'); 
         // GETTING ORDER ID
@@ -225,6 +214,7 @@ class Qinvoice_Connect_Model_Order_Observer
         $resultRemark = $db->query("SELECT value FROM {$prefix}core_config_data WHERE path LIKE '".$varRemarkPath."'");
         $rowRemark = $resultRemark->fetch(PDO::FETCH_ASSOC);
         
+        $order_id = $rowOne['increment_id'];
         $invoice_remark = $rowRemark['value'];
         $invoice_remark = str_replace('{order_id}',$rowOne['increment_id'],$invoice_remark);
         $invoice_remark = str_replace('{shipping_description}',$rowOne['shipping_description'],$invoice_remark);
@@ -287,6 +277,11 @@ class Qinvoice_Connect_Model_Order_Observer
       //  $invoice->addTag('send: '. $send_mail);
       //  $invoice->addTag('paid: '. $paid .' '. $rowOne['total_paid']);
 
+
+        $order = Mage::getModel('sales/order')->loadByIncrementId($varOrderID);
+        $store_id = $order->getStoreId();
+
+      
         $attributes = Mage::getResourceModel('catalog/product_attribute_collection')->addVisibleFilter();
         $attributeArray = array();
 
@@ -297,134 +292,134 @@ class Qinvoice_Connect_Model_Order_Observer
                 //     'value' => $attribute->getData('attribute_code')
                 // );
         }
+
+
         
 
-            for($i=0;$i<count($arrData);$i++)
-            {
-                $category = '';
-                $_productId = $arrData[$i]['product_id'];
-                $_product = Mage::getModel('catalog/product')->load($_productId);
-                $category = $_product->getData('qinvoice_category');
-                $productcode = $_product->getData('qinvoice_productcode');
-  
-                $arrItemOptions = unserialize($arrData[$i]['product_options']);
+        for($i=0;$i<count($arrData);$i++)
+        {
+            $category = '';
+            $_productId = $arrData[$i]['product_id'];
+            $_product = Mage::getModel('catalog/product')->load($_productId);
 
-                $varDescription = '';
 
-               //print_r();
+            $category = $_product->getData('qinvoice_category');
+            $productcode = $_product->getData('qinvoice_productcode');
 
-                $product_attributes = explode(",",$pa_array['value']);
-                foreach($product_attributes as $pa){
-                    if(isset($_product[$pa]))
-                    {
-                        $varDescription .= "\n". $attributeArray[$pa] .': '. $_product[$pa];
-                    }
-                }
+            $arrItemOptions = unserialize($arrData[$i]['product_options']);
 
-                
-                if(@$arrItemOptions['options'])
+            $varDescription = '';
+
+           //print_r();
+
+            $product_attributes = explode(",",$pa_array['value']);
+            foreach($product_attributes as $pa){
+                if(isset($_product[$pa]))
                 {
-                    for($k=0; $k <count($arrItemOptions['options']); $k++)
-                    {
-                        $varDescription .= "\n".$arrItemOptions['options'][$k]['label'].": ".$arrItemOptions['options'][$k]['print_value']."\n";
-                    }
+                    $varDescription .= "\n". $attributeArray[$pa] .': '. $_product[$pa];
                 }
-                
-                if(@$arrItemOptions['attributes_info'])
-                {
-                    for($k=0; $k <count($arrItemOptions['attributes_info']); $k++)
-                    {
-                        $varDescription .= "\n".$arrItemOptions['attributes_info'][$k]['label'].": ".$arrItemOptions['attributes_info'][$k]['value']."\n";
-                    }
-                }
-
-
-                //echo $varDescription;
-
-
-                // else
-                // {
-                //     $varDescription = ''; //"[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']);
-                // }
-               // print_r($_product);
-                // echo '<pre>';
-                // print_r( $arrItemOptions );
-                // echo '</pre>';
-            
-
-               
-                $params = array(    
-                    'code' => $productcode,
-                    'description' => "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']) . $varDescription,
-                    'price' => $arrData[$i]['base_price']*100,
-                    //'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
-                    'price_incl' => round(((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100),
-                    'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
-                    'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
-                    'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
-                    'quantity' => $arrData[$i]['qty_ordered']*100,
-                    'categories' => $category
-                    );
-                //mail('casper@expertnetwork.nl', 'vat', $arrData[$i]['tax_percent']);
-
-                // echo '<pre>';
-                // print_r( $params );
-                // echo '</pre>';
-                // die();
-                $invoice->addItem($params);
-
             }
-            if($rowOne['shipping_amount'] > 0)
+
+            
+            if(@$arrItemOptions['options'])
             {
-                $params = array(  
-                    'code' => '',  
-                    'description' => trim($rowOne['shipping_description']),
-                    'price' => $rowOne['shipping_amount']*100,
-                    'price_incl' => $rowOne['shipping_incl_tax']*100,
-                    'price_vat' => $rowOne['shipping_tax_amount']*100,
-                    'vatpercentage' => round(($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100)*100,
-                    'discount' => 0,
-                    'quantity' => 100,
-                    'categories' => 'shipping'
-                    );
-
-                $invoice->addItem($params);
-                
+                for($k=0; $k <count($arrItemOptions['options']); $k++)
+                {
+                    $varDescription .= "\n".$arrItemOptions['options'][$k]['label'].": ".$arrItemOptions['options'][$k]['print_value']."\n";
+                }
+            }
+            
+            if(@$arrItemOptions['attributes_info'])
+            {
+                for($k=0; $k <count($arrItemOptions['attributes_info']); $k++)
+                {
+                    $varDescription .= "\n".$arrItemOptions['attributes_info'][$k]['label'].": ".$arrItemOptions['attributes_info'][$k]['value']."\n";
+                }
             }
 
-            
-            
-    
-            $result =  $invoice->sendRequest();
-            if($result == 1){
-                //notify_to_admin('Casper Mekel','casper@newday.sk','Invoice generated!');
-            }else{
-                //notify_to_admin('Casper Mekel','casper@newday.sk','Something went wrong!');
+            if(@$arrItemOptions['bundle_options'])
+            {
+                foreach($arrItemOptions['bundle_options'] as $option){
+                    foreach($option['value'] as $value){
+                       $varDescription .= "\n".'['. $option['label'] .'] '. $value['qty'] .' x '. $value['title'];
+                    }
+                } 
             }
+
+
+          
+        
+
            
-            return true;
+            $params = array(    
+                'code' => $productcode,
+                'description' => "[".$arrData[$i]['sku']."] ".trim($arrData[$i]['name']) . $varDescription,
+                'price' => $arrData[$i]['base_price']*100,
+                //'price_incl' => ((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100,
+                'price_incl' => round(((($arrData[$i]['base_price']*$arrData[$i]['qty_ordered'])+$arrData[$i]['tax_amount'])/$arrData[$i]['qty_ordered'])*100),
+                'price_vat' => ($arrData[$i]['tax_amount']/$arrData[$i]['qty_ordered'])*100,
+                'vatpercentage' => trim(number_format($arrData[$i]['tax_percent'],2,'.', ''))*100,
+                'discount' => trim(number_format($arrData[$i]['base_discount_amount'], 2, '.', '')/$arrData[$i]['base_price'])*100,
+                'quantity' => $arrData[$i]['qty_ordered']*100,
+                'categories' => $category
+                );
+
+            $invoice->addItem($params);
+
+        }
+
+        if($rowOne['shipping_amount'] > 0)
+        {
+            $params = array(  
+                'code' => '',  
+                'description' => trim($rowOne['shipping_description']),
+                'price' => $rowOne['shipping_amount']*100,
+                'price_incl' => $rowOne['shipping_incl_tax']*100,
+                'price_vat' => $rowOne['shipping_tax_amount']*100,
+                'vatpercentage' => round(($rowOne['shipping_tax_amount']/$rowOne['shipping_amount'])*100)*100,
+                'discount' => 0,
+                'quantity' => 100,
+                'categories' => 'shipping'
+                );
+
+            $invoice->addItem($params);
+            
+        }
+
+            
+            
+
+        $result =  $invoice->sendRequest();
+        if($result != 1){
+            $this->notify_admin('Qinvoice Connect Error','Could not send invoice for order '. $order_id);
+        }
+       
+        return true;
         
 
         //$curlInvoiveResult = $this->sendCurlRequest($createInvoiceXML);
     }
-    
-    public function notify_to_admin($name, $email, $msg) 
+    public function notify_admin($subject,$msg) 
     {
         $varSubject = 'Qinvoice Notification';
                 
-        //Mage::log($msg);
-                    
+        Mage::log($subject .': '. $msg);
+
         $mail = Mage::getModel('core/email');
-        $mail->setToName($name);
-        $mail->setToEmail($email);
+        $mail->setToName(Mage::getStoreConfig('trans_email/ident_general/name') );
+        $mail->setToEmail(Mage::getStoreConfig('trans_email/ident_general/email') );
         $mail->setBody($msg);
-        $mail->setSubject($varSubject);
+        $mail->setSubject($subject);
         $mail->setFromEmail("support@qinvoice.com");
-        $mail->setFromName("Qinvoice Development");
+        $mail->setFromName("Qinvoice Support");
         $mail->setType('text');
         $mail->send();
     }
+    
 }
+
+
+
 
 class qinvoice{
 

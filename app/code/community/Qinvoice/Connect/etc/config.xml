@@ -3,7 +3,7 @@
 <config>
     <modules>
         <Qinvoice_Connect>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
         </Qinvoice_Connect>
     </modules>
     <global>
@@ -13,23 +13,23 @@
             </invoice>
         </models>
         <events>
-            <sales_order_place_after>
+            <sales_order_invoice_register>
                 <observers>
                     <connect>
                         <class>invoice/order_observer</class>
                         <method>sendOnOrder</method>
                     </connect>
                 </observers>
-            </sales_order_place_after> 
+            </sales_order_invoice_register> 
 
-            <sales_order_payment_pay>
+            <sales_order_invoice_pay>
                 <observers>
                     <connect>
                         <class>invoice/order_observer</class>
                         <method>sendOnPayment</method>
                     </connect>
                 </observers>
-            </sales_order_payment_pay>    
+            </sales_order_invoice_pay>    
         </events>
        <helpers>
             <invoice>
