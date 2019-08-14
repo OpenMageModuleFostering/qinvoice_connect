@@ -5,8 +5,7 @@ class Qinvoice_Connect_Model_Source_Trigger
   {
     return array(
       array('value' => 'order', 'label' =>'On every order'),
-      array('value' => 'payment', 'label' => 'Only on successful payment'),
-      array('value' => 'ship', 'label' => 'When order is shipped')
+      array('value' => 'payment', 'label' => 'Only on successful payment')
     );
   }
 }
