@@ -173,22 +173,7 @@ class Qinvoice_Connect_Model_Order_Observer
         }
     }
 
-    public function sendOnShip($observer){
-        return false;
-        $shipment = $observer->getEvent()->getShipment(); 
-
-        $order = $shipment->getOrder(); 
-
-        // GETTING TRIGGER SETTING
-        $invoice_trigger = Mage::getStoreConfig('invoice_options/invoice/invoice_trigger');
-
-        if($invoice_trigger == 'ship'){
-            $this->createInvoiceForQinvoice($order->getId(), false);
-        }else{
-            return true;
-        }
-    }
-
+    
     public function sendOnOrder($observer){
         $order = $observer->getEvent()->getOrder(); 
 
@@ -206,14 +191,14 @@ class Qinvoice_Connect_Model_Order_Observer
     public function sendOnPayment($observer){
         // Gets called even when other payment method is choosen.
         
-        $order_ids = $observer->getEvent()->getOrderIds(); 
-        $order = $observer->getEvent()->getOrder(); 
+        $event = $observer->getEvent();
+        $order = $event->getOrder(); 
 
         // GETTING TRIGGER SETTING
         $invoice_trigger = Mage::getStoreConfig('invoice_options/invoice/invoice_trigger');
 
         if($invoice_trigger == 'payment'){
-            $this->createInvoiceForQinvoice($order_ids[0], true);
+            $this->createInvoiceForQinvoice($order->getId(), true);
         }
 
         // else{
@@ -227,9 +212,14 @@ class Qinvoice_Connect_Model_Order_Observer
         $event = $observer->getEvent();
         $order = $event->getOrder(); 
         
+
         $invoice_trigger = Mage::getStoreConfig('invoice_options/invoice/invoice_trigger');
+
+        // echo $order->getId() .' '. $order->getState() .' '. Mage_Sales_Model_Order::STATE_COMPLETE .' '. $invoice_trigger; 
+            
+            // exit();
         if($order->getState() == Mage_Sales_Model_Order::STATE_COMPLETE && $invoice_trigger == 'complete'){
-            $this->createInvoiceForQinvoice($order->getId(), true);
+            $this->createInvoiceForQinvoice($order->getId(), false);
         }
         // exit();
 
@@ -679,7 +669,7 @@ class qinvoice{
                         <login mode="newInvoice">
                             <username><![CDATA['.$this->username.']]></username>
                             <password><![CDATA['.$this->password.']]></password>
-                            <identifier><![CDATA[Magento_2.1.2]]></identifier>
+                            <identifier><![CDATA[Magento_2.1.3]]></identifier>
                         </login>
                         <invoice>
                             <companyname><![CDATA['. $this->companyname .']]></companyname>
