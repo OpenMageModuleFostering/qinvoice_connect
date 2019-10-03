@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/Qinvoice_Connect",
+    "name": "OpenMageModuleFostering\/Qinvoice_Connect",
     "type": "magento-module",
     "license": "GPL",
     "homepage": "",
     "description": "Automatically generate and send PDF invoices for every order to your customers through q-invoice.com",
     "authors": [
-    {
-        "name": "Casper Mekel",
-        "email": "info@q-invoice.com"
-    }
-],
+        {
+            "name": "Casper Mekel",
+            "email": "info@q-invoice.com"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
